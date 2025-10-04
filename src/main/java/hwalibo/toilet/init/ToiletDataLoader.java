@@ -37,11 +37,25 @@ public class ToiletDataLoader {
             String line;
             br.readLine(); // header skip
             int count = 0;
+            int skipped = 0;
 
             while ((line = br.readLine()) != null) {
+                // ✅ 완전 빈 줄 방지
+                if (line.trim().isEmpty()) {
+                    skipped++;
+                    continue;
+                }
+
                 String[] tokens = line.split(",");
 
-                // 방어적 파싱 (빈 값이면 0 or 0.0)
+                // ✅ 컬럼 수 부족 시 skip (11개 미만인 경우)
+                if (tokens.length < 11) {
+                    log.warn("⚠️ Skipped invalid line (too few columns): {}", line);
+                    skipped++;
+                    continue;
+                }
+
+                // ✅ 방어적 파싱 (빈 값 → 0 또는 0.0)
                 String name = tokens[0].trim();
                 Integer lineNum = safeParseInt(tokens[1]);
                 Gender gender = safeParseEnum(tokens[2], Gender.class);
@@ -53,6 +67,12 @@ public class ToiletDataLoader {
                 Integer numSmallToilet = safeParseInt(tokens[8]);
                 Integer numReview = safeParseInt(tokens[9]);
                 Double star = safeParseDouble(tokens[10]);
+
+                // ✅ 잘못된 좌표(0,0)인 경우 skip (옵션)
+                if (latitude == 0.0 && longitude == 0.0) {
+                    skipped++;
+                    continue;
+                }
 
                 Toilet toilet = Toilet.builder()
                         .name(name)
@@ -73,6 +93,9 @@ public class ToiletDataLoader {
             }
 
             log.info("✅ {} toilets successfully loaded into database.", count);
+            if (skipped > 0) {
+                log.info("⚠️ {} invalid or empty lines were skipped during import.", skipped);
+            }
 
         } catch (Exception e) {
             log.error("❌ Error loading toilet data", e);
