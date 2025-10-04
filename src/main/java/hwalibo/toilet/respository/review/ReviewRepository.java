@@ -34,4 +34,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return Optional<Review>
      */
     Optional<Review> findByUserAndToilet(User user, Toilet toilet);
+
+    // ✅ toilet_id 기준으로 리뷰 정렬 조회
+    List<Review> findByToiletIdOrderByCreatedAtAsc(Long toiletId);
+
+    //count 메서드
+    long countByToilet_Id(Long toiletId);
 }

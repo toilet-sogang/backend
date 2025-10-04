@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Spring Boot Naver Login Test</title>
+    <style>
+        /* ✅ 선택: 로딩 표시용 */
+        #loading { display:none; font-size:14px; color:#555; }
+        .btn { font-size:16px; padding:10px; margin-right:8px; }
+    </style>
 </head>
 <body>
 
@@ -15,9 +20,14 @@
 <hr>
 
 <h2>API 테스트</h2>
-<button onclick="fetchUserInfo()" style="font-size: 16px;">내 정보 조회하기 (Access Token 사용)</button>
-<button onclick="updateUserName()" style="font-size: 16px;">닉네임 변경 (PATCH)</button>
-<button onclick="logout()" style="font-size: 16px;">로그아웃</button>
+<button onclick="fetchUserInfo()" class="btn">내 정보 조회하기 (Access Token 사용)</button>
+<button onclick="updateUserName()" class="btn">닉네임 변경 (PATCH)</button>
+<button onclick="logout()" class="btn">로그아웃</button>
+
+<!-- ✅ 추가: 리뷰 요약 -->
+<h2>리뷰 요약 (toiletId=1 고정)</h2>
+<button onclick="summarizeToilet1()" class="btn">요약 생성하기</button>
+<span id="loading">요약 생성 중...</span>
 
 <h3>결과:</h3>
 <pre id="result"></pre>
@@ -30,7 +40,7 @@
             document.getElementById('result').innerText =
                 '로그인 상태입니다.\n\n' +
                 'Access Token: ' + accessToken.substring(0, 30) + '...\n' +
-                'Refresh Token: ' + refreshToken.substring(0, 30) + '...';
+                'Refresh Token: ' + (refreshToken ? refreshToken.substring(0, 30) + '...' : '없음');
         } else {
             document.getElementById('result').innerText = '로그아웃 상태입니다.';
         }
@@ -102,8 +112,57 @@
             console.error('Error during logout:', error);
         }
     }
+
+    // ✅ 추가: OpenAI 요약 호출 (toiletId=1 고정)
+    async function summarizeToilet1() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            alert('먼저 네이버 로그인 후 토큰을 발급받아 주세요.');
+            return;
+        }
+
+        const loader = document.getElementById('loading');
+        const resultEl = document.getElementById('result');
+
+        try {
+            loader.style.display = 'inline';
+
+            // 컨트롤러 매핑: GET /toilet/{toiletId}/reviews/summary
+            const response = await fetch('/toilet/1/reviews/summary', {
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+
+            const payload = await response.json();
+
+            // 표준 ApiResponse 포맷 출력
+            // 성공이면 요약만 보기 쉽게 강조
+            if (response.ok && payload && payload.success && payload.data && payload.data.summary) {
+                resultEl.innerText =
+`[요약 성공 ✅]
+${payload.data.summary}
+
+== Raw ==
+${JSON.stringify(payload, null, 2)}`;
+            } else {
+                resultEl.innerText = JSON.stringify(payload, null, 2);
+                if (response.status === 404) {
+                    alert('해당 화장실에 리뷰가 없습니다.');
+                } else if (response.status === 401) {
+                    alert('인증이 필요합니다. 다시 로그인해 주세요.');
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            resultEl.innerText = '요약 생성 중 에러가 발생했습니다.';
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
 </script>
 
 </body>
 </html>
+
+
 

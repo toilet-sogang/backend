@@ -37,3 +37,6 @@ out/
 .vscode/
 
 .env
+
+# 🚫 로컬 더미 시드 클래스 제외
+src/main/java/hwalibo/toilet/init/DummySeedReviewer.java
