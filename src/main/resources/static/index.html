@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Spring Boot Naver Login Test</title>
+</head>
+<body>
+
+<h1>Naver + JWT 로그인 테스트 페이지</h1>
+
+<a href="/oauth2/authorization/naver">
+    <button style="font-size: 20px; padding: 10px;">네이버로 로그인 (먼저 하세요)</button>
+</a>
+
+<hr>
+
+<h2>API 테스트</h2>
+<button onclick="fetchUserInfo()" style="font-size: 16px;">내 정보 조회하기 (Access Token 사용)</button>
+<button onclick="updateUserName()" style="font-size: 16px;">닉네임 변경 (PATCH)</button>
+<button onclick="logout()" style="font-size: 16px;">로그아웃</button>
+
+<h3>결과:</h3>
+<pre id="result"></pre>
+
+<script>
+    window.onload = function() {
+        const accessToken = localStorage.getItem('accessToken');
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (accessToken) {
+            document.getElementById('result').innerText =
+                '로그인 상태입니다.\n\n' +
+                'Access Token: ' + accessToken.substring(0, 30) + '...\n' +
+                'Refresh Token: ' + refreshToken.substring(0, 30) + '...';
+        } else {
+            document.getElementById('result').innerText = '로그아웃 상태입니다.';
+        }
+    }
+
+    async function fetchUserInfo() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            alert('먼저 로그인 버튼을 눌러 로그인을 완료해주세요.');
+            return;
+        }
+        try {
+            const response = await fetch('/user/profile', {   // ✅ 프로필 조회
+                method: 'GET',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+            document.getElementById('result').innerText = '정보 조회 중 에러 발생!';
+        }
+    }
+
+    async function updateUserName() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            alert('먼저 로그인하세요.');
+            return;
+        }
+
+        const newName = prompt("새로운 닉네임을 입력하세요 (2~10자):");
+        if (!newName) return;
+
+        try {
+            const response = await fetch('/user/profile/name', {   // ✅ 이름 변경
+                method: 'PATCH',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newName })
+            });
+
+            const result = await response.json();
+            document.getElementById('result').innerText = JSON.stringify(result, null, 2);
+        } catch (error) {
+            console.error('Error updating name:', error);
+            document.getElementById('result').innerText = '닉네임 변경 중 에러 발생!';
+        }
+    }
+
+    async function logout() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+            alert('이미 로그아웃 상태입니다.');
+            return;
+        }
+        try {
+            await fetch('/auth/logout', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            alert('로그아웃 되었습니다.');
+            window.location.reload();
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
+    }
+</script>
+
+</body>
+</html>
+
