@@ -3,7 +3,7 @@ package hwalibo.toilet.controller.auth;
 import hwalibo.toilet.auth.jwt.JwtConstants;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
-import hwalibo.toilet.dto.auth.request.RefreshTokenRequest;
+import hwalibo.toilet.dto.auth.request.TokenRequest;
 import hwalibo.toilet.dto.auth.response.TokenResponse;
 import hwalibo.toilet.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,17 +28,20 @@ public class AuthController {
 
     @Operation(
             summary = "Access Token 재발급",
-            description = "Refresh Token을 사용하여 만료된 Access Token을 새로 발급받습니다.",
+            description = "만료된 Access Token과 Refresh Token을 함께 전달하여 새 Access Token을 발급받습니다.",
             security = {} // Swagger 문서에서 보안 요구 제거
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 Refresh Token", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "로그아웃된 사용자 또는 유효하지 않은 Refresh Token", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "DB에 존재하지 않는 Refresh Token", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@RequestBody RefreshTokenRequest requestDto) {
-        TokenResponse tokenResponse = authService.reissueTokens(requestDto.getRefreshToken());
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@RequestBody TokenRequest request) {
+        String accessToken = request.getAccessToken();
+        String refreshToken = request.getRefreshToken();
+
+        TokenResponse tokenResponse = authService.reissueTokens(accessToken, refreshToken);
         return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "토큰이 성공적으로 재발급되었습니다.", tokenResponse));
     }
 
