@@ -1,5 +1,6 @@
 package hwalibo.toilet.controller.auth;
 
+import hwalibo.toilet.auth.jwt.JwtConstants;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.auth.request.RefreshTokenRequest;
@@ -25,7 +26,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // ✅ 인증 불필요
     @Operation(
             summary = "Access Token 재발급",
             description = "Refresh Token을 사용하여 만료된 Access Token을 새로 발급받습니다.",
@@ -42,19 +42,39 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "토큰이 성공적으로 재발급되었습니다.", tokenResponse));
     }
 
-    // ✅ JWT 인증 필요
     @Operation(
             summary = "로그아웃",
             description = "현재 로그인된 사용자를 로그아웃 처리하고 Refresh Token을 무효화합니다.",
-            security = { @SecurityRequirement(name = "bearerAuth") }
+            security = { @SecurityRequirement(name = "bearerAuth") } // 🔒 Swagger에서 JWT 인증 필요
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Access Token이 유효하지 않아 인증 실패", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "로그아웃 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Access Token이 유효하지 않아 인증 실패",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
     })
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal User loginUser) {
-        authService.logout(loginUser);
-        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "성공적으로 로그아웃 되었습니다."));
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal User loginUser,
+            @RequestHeader(value = JwtConstants.HEADER_STRING, required = false) String authHeader
+    ) {
+        // ✅ Access Token 추출
+        String accessToken = null;
+        if (authHeader != null && authHeader.startsWith(JwtConstants.TOKEN_PREFIX)) {
+            accessToken = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
+        }
+
+        // ✅ 로그아웃 처리 (DB RefreshToken 삭제 + Redis 블랙리스트 등록)
+        authService.logout(loginUser, accessToken);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, HttpStatus.OK.value(), "성공적으로 로그아웃되었습니다.")
+        );
     }
 }

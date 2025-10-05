@@ -2,6 +2,11 @@ spring:
   application:
     name: demo
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
   datasource:
     url: ${DB_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -10,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # create(develop) or update
+      ddl-auto: update   # 개발 단계는 create/update, 운영은 none
     properties:
       hibernate:
         format_sql: true
@@ -48,5 +53,9 @@ openai:
   chat-model: gpt-4o-mini
   timeout-ms: 10000
 
-
-
+springdoc:
+  swagger-ui:
+    persistAuthorization: false
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

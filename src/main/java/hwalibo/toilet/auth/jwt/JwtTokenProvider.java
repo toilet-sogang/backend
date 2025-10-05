@@ -2,6 +2,7 @@ package hwalibo.toilet.auth.jwt;
 
 import hwalibo.toilet.auth.CustomOAuth2User;
 import hwalibo.toilet.domain.user.User;
+import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.respository.user.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -90,6 +91,27 @@ public class JwtTokenProvider {
         }
         return false;
     }
+
+    // AccessToken 남은 만료 시간(ms) 조회
+    public long getExpiration(String token) {
+        try {
+            token = stripBearerPrefix(token); // "Bearer " 제거
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Date expiration = claims.getExpiration();
+            long now = System.currentTimeMillis();
+
+            return expiration.getTime() - now; // 남은 만료 시간 (ms)
+        } catch (JwtException e) {
+            log.error("Error getting expiration from token: {}", e.getMessage());
+            throw new InvalidTokenException("유효하지 않은 토큰입니다.");
+        }
+    }
+
 
     // ---------------------- Helper Methods ----------------------
 

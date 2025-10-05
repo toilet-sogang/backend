@@ -6,14 +6,15 @@ import hwalibo.toilet.dto.auth.response.TokenResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
-import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -23,6 +24,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
 
     //토큰 재발급
     public TokenResponse reissueTokens(String refreshToken) {
@@ -47,10 +49,18 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(User user) {
+    public void logout(User user,String accessToken) {
         if (user == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
         user.updateRefreshToken(null);
+
+        long expiration = jwtTokenProvider.getExpiration(accessToken);
+        redisTemplate.opsForValue().set(
+                "blacklist:" + accessToken, "logout",
+                expiration, TimeUnit.MILLISECONDS
+        );
+        log.info("✅ AccessToken 블랙리스트 등록 완료: {} (유효기간 {}ms)", accessToken, expiration);
     }
+
 }
