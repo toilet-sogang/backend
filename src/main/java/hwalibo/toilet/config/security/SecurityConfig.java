@@ -1,25 +1,25 @@
 package hwalibo.toilet.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hwalibo.toilet.auth.handler.OAuth2SuccessHandler;
 import hwalibo.toilet.auth.jwt.JwtAuthenticationFilter;
+import hwalibo.toilet.auth.jwt.JwtTokenProvider;
+import hwalibo.toilet.auth.service.CustomOAuth2UserService;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import hwalibo.toilet.auth.handler.OAuth2SuccessHandler;
-import hwalibo.toilet.auth.jwt.JwtTokenProvider;
-import hwalibo.toilet.auth.service.CustomOAuth2UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -27,7 +27,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // @PreAuthorize, @Secured 애노테이션을 이용한 메서드 단위 권한 제어 활성화
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -35,19 +35,23 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final JwtTokenProvider jwtTokenProvider;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // CorsConfigurationSource 빈을 사용
                 .cors(withDefaults())
-                .httpBasic(b -> b.disable())
+
+                // CSRF/폼/기본 인증/로그아웃 비활성
+                .httpBasic(h -> h.disable())
                 .csrf(c -> c.disable())
                 .formLogin(f -> f.disable())
                 .logout(l -> l.disable())
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // OAuth2 흐름에서 세션이 잠깐 필요할 수 있으므로 IF_REQUIRED 권장
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 .authorizeHttpRequests(auth -> auth
-                        // OPTIONS 허용 (CORS preflight)
+                        // Preflight는 모두 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 공개 엔드포인트
@@ -59,8 +63,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // 토큰 없음(미인증) 시 특정 API 경로는 401 JSON 반환 (리다이렉트 방지)
+                // 전역 EntryPoint + 경로별 보강 (항상 CORS 헤더가 달리도록)
                 .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(restAuthenticationEntryPoint()) // ★ 전역
                         .defaultAuthenticationEntryPointFor(restAuthenticationEntryPoint(), new AntPathRequestMatcher("/user/**"))
                         .defaultAuthenticationEntryPointFor(restAuthenticationEntryPoint(), new AntPathRequestMatcher("/auth/**"))
                         .defaultAuthenticationEntryPointFor(restAuthenticationEntryPoint(), new AntPathRequestMatcher("/toilet/**"))
@@ -73,27 +78,27 @@ public class SecurityConfig {
                         .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 )
 
-                // JWT 필터
+                // JWT 필터 (없으면 통과, 유효성 실패도 에러 쓰지 말고 통과)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // SecurityConfig 내부에 추가
     @Bean
     public AuthenticationEntryPoint restAuthenticationEntryPoint() {
         return (HttpServletRequest request, HttpServletResponse response, AuthenticationException ex) -> {
-            // CORS 헤더 (브라우저가 401 응답을 읽을 수 있도록)
+            // CORS 헤더(반드시 부착)
             String origin = request.getHeader("Origin");
             if (origin != null) {
                 response.setHeader("Access-Control-Allow-Origin", origin);
                 response.setHeader("Vary", "Origin");
             }
             response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With");
+            response.setHeader("Access-Control-Allow-Headers",
+                    "Authorization, Content-Type, X-Requested-With, Access-Token, Refresh-Token");
             response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-            response.setHeader("Access-Control-Expose-Headers", "Authorization");
+            response.setHeader("Access-Control-Expose-Headers", "Authorization, Access-Token, Refresh-Token");
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
@@ -103,3 +108,4 @@ public class SecurityConfig {
         };
     }
 }
+
