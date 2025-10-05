@@ -2,7 +2,6 @@ package hwalibo.toilet.service.user;
 
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
-import hwalibo.toilet.dto.user.response.UpdatedUser;
 import hwalibo.toilet.dto.user.response.UserResponse;
 import hwalibo.toilet.dto.user.response.UserUpdateResponse;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
@@ -47,16 +46,14 @@ public class UserService {
 
         String newName = request.getName();
 
-        // ✅ 닉네임 중복 체크
         if (userRepository.existsByName(newName)) {
             throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
         }
 
         user.updateName(newName);
 
-        User updated = userRepository.findById(user.getId())
-                .orElseThrow(UserNotFoundException::new);
-
-        return new UserUpdateResponse(UpdatedUser.from(updated));
+        // ✅ 바로 from 메서드로 변환
+        return UserUpdateResponse.from(user);
     }
+
 }
