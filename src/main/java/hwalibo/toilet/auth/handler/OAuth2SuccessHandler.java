@@ -4,7 +4,6 @@ import hwalibo.toilet.auth.CustomOAuth2User;
 import hwalibo.toilet.auth.jwt.JwtTokenProvider;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.respository.user.UserRepository;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -18,7 +18,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import static hwalibo.toilet.auth.jwt.JwtConstants.*; // ✅ 상수 import
+import static hwalibo.toilet.auth.jwt.JwtConstants.*;
 
 @Slf4j
 @Component

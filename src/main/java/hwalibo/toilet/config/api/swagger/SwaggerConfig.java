@@ -26,10 +26,6 @@ public class SwaggerConfig {
                         .bearerFormat("JWT")
                         .in(SecurityScheme.In.HEADER)
                         .name("Authorization");
-
-                // ✅ 전역 보안 요구 제거
-                //    .addSecurityItem(securityRequirement) 삭제
-                //    각 컨트롤러에서 개별적으로 @SecurityRequirement(name = "bearerAuth") 사용
                 return new OpenAPI()
                         .components(new Components().addSecuritySchemes("bearerAuth", bearerAuth));
         }

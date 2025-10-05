@@ -64,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (JwtException | UsernameNotFoundException | IllegalArgumentException ex) {
                 // 파싱 실패/유저 미존재/기타 토큰 오류 → 401 JSON
                 SecurityContextHolder.clearContext();
-                log.debug("JWT ✗ Rejecting token: {} → 401", ex.getMessage());
+                log.warn("JWT ✗ Rejecting token: {} → 401", ex.getMessage());
 
                 addCorsHeaders(request, response);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -78,7 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } else {
             // 토큰이 아예 없는 경우: 기본 동작(익명 → 필요시 OAuth2 로그인 302 리다이렉트)에 맡김
-            log.debug("JWT ⇢ no Bearer token");
+            log.warn("JWT ⇢ no Bearer token");
         }
 
         filterChain.doFilter(request, response);
