@@ -12,13 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserUpdateResponse {
 
-    private Long id;
     private String name;
 
     // ✅ 정적 팩토리 메서드
     public static UserUpdateResponse from(User user) {
         return UserUpdateResponse.builder()
-                .id(user.getId())
                 .name(user.getName())
                 .build();
     }
