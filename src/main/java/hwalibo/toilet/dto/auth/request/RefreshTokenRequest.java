@@ -6,11 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class TokenRequest {
-
-    @NotBlank(message = "액세스 토큰은 필수입니다.")
-    private String accessToken;
-
+public class RefreshTokenRequest {
     @NotBlank(message = "리프레시 토큰은 필수입니다.")
     private String refreshToken;
 }

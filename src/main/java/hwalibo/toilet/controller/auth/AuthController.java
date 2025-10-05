@@ -3,7 +3,7 @@ package hwalibo.toilet.controller.auth;
 import hwalibo.toilet.auth.jwt.JwtConstants;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
-import hwalibo.toilet.dto.auth.request.TokenRequest;
+import hwalibo.toilet.dto.auth.request.RefreshTokenRequest;
 import hwalibo.toilet.dto.auth.response.TokenResponse;
 import hwalibo.toilet.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,21 +29,33 @@ public class AuthController {
 
     @Operation(
             summary = "Access Token 재발급",
-            description = "만료된 Access Token과 Refresh Token을 함께 전달하여 새 Access Token을 발급받습니다.",
+            description = "만료된 Access Token과 Refresh Token을 함께 보내 새로운 토큰들을 발급받습니다.",
             security = {} // Swagger 문서에서 보안 요구 제거
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "로그아웃된 사용자 또는 유효하지 않은 Refresh Token", content = @Content(schema = @Schema(implementation = ApiResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "DB에 존재하지 않는 Refresh Token", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "블랙리스트 또는 유효하지 않은 Refresh Token",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "DB에 Refresh Token 없음",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
-    @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@RequestBody TokenRequest request) {
-        String accessToken = request.getAccessToken();
-        String refreshToken = request.getRefreshToken();
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @Valid @RequestBody RefreshTokenRequest request) {
 
-        TokenResponse tokenResponse = authService.reissueTokens(accessToken, refreshToken);
-        return ResponseEntity.ok(new ApiResponse<>(true, HttpStatus.OK.value(), "토큰이 성공적으로 재발급되었습니다.", tokenResponse));
+        String accessToken = null;
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            accessToken = authorization.substring(7);
+        }
+
+        TokenResponse tokenResponse = authService.reissueTokens(
+                request.getRefreshToken(), accessToken
+        );
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, 200, "토큰이 성공적으로 재발급되었습니다.", tokenResponse)
+        );
     }
 
     @Operation(
