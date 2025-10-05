@@ -5,6 +5,7 @@ import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.auth.response.TokenResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
+import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,9 @@ public class AuthService {
 
     @Transactional
     public void logout(User user) {
+        if (user == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
         user.updateRefreshToken(null);
     }
 }

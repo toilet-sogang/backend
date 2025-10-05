@@ -4,6 +4,7 @@ import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
 import hwalibo.toilet.dto.user.response.UserUpdateResponse;
+import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.user.UserRepository;
@@ -20,6 +21,11 @@ public class UserService {
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
     public UserResponse getUserInfo(User loginUser) {
+
+        if (loginUser == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
 
@@ -41,6 +47,11 @@ public class UserService {
 
     @Transactional
     public UserUpdateResponse updateUserName(User loginUser, UserNameUpdateRequest request) {
+
+        if (loginUser == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
 
@@ -51,8 +62,6 @@ public class UserService {
         }
 
         user.updateName(newName);
-
-        // ✅ 바로 from 메서드로 변환
         return UserUpdateResponse.from(user);
     }
 

@@ -3,6 +3,7 @@ package hwalibo.toilet.exception;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
+import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", ")); // 쉼표로 구분
 
         return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
+    }
+
+    //UnauthorizedException
+    @ExceptionHandler(UnauthorizedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleUnauthorizedException(UnauthorizedException e){
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage());
     }
 
     //UserNotFoundException
