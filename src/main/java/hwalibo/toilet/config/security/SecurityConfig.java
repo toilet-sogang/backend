@@ -35,71 +35,17 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisTemplate<String, String> redisTemplate; // ✅ 추가됨
+    private final RedisTemplate<String, String> redisTemplate;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // ✅ CORS 설정 (CorsConfig의 Bean 자동참조)
-                .cors(withDefaults())
-
-                // ✅ 기본 인증, CSRF, 폼, 로그아웃 비활성화
-                .httpBasic(b -> b.disable())
-                .csrf(c -> c.disable())
-                .formLogin(f -> f.disable())
-                .logout(l -> l.disable())
-
-                // ✅ OAuth2 과정 중 세션 잠깐 필요하므로 IF_REQUIRED
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-
-                // ✅ 요청별 권한 설정
-                .authorizeHttpRequests(auth -> auth
-                        // Preflight 허용
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 공개 엔드포인트
-                        .requestMatchers("/", "/index.html", "/auth/callback.html", "/auth/refresh","/redis/ping").permitAll()
-                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-
-                        // 그 외는 인증 필요
-                        .anyRequest().authenticated()
-                )
-
-                // ✅ 전역 AuthenticationEntryPoint 등록
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(restAuthenticationEntryPoint())
-                        .defaultAuthenticationEntryPointFor(
-                                restAuthenticationEntryPoint(),
-                                new AntPathRequestMatcher("/auth/**"))
-                )
-
-                // ✅ OAuth2 로그인 설정
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2SuccessHandler)
-                        .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
-                )
-
-                // ✅ JWT 필터 등록 (Redis 블랙리스트 포함)
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider, redisTemplate),
-                        UsernamePasswordAuthenticationFilter.class
-                );
-
-        return http.build();
-    }
-
-    // ✅ 전역 401 응답 EntryPoint
+    // ✅ 전역 401 응답 EntryPoint (필터/컨트롤러에서 전달한 ex.getMessage() 우선 사용)
     @Bean
     public AuthenticationEntryPoint restAuthenticationEntryPoint() {
         return (HttpServletRequest request, HttpServletResponse response, AuthenticationException ex) -> {
-            // CORS 헤더 반드시 추가
             String origin = request.getHeader("Origin");
             if (origin != null) {
                 response.setHeader("Access-Control-Allow-Origin", origin);
                 response.setHeader("Vary", "Origin");
             }
-
             response.setHeader("Access-Control-Allow-Credentials", "true");
             response.setHeader("Access-Control-Allow-Headers",
                     "Authorization, Content-Type, X-Requested-With, Access-Token, Refresh-Token");
@@ -110,9 +56,63 @@ public class SecurityConfig {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
 
-            ApiResponse<Object> body = new ApiResponse<>(false, 401, "인증이 필요합니다.");
-            new ObjectMapper().writeValue(response.getWriter(), body);
+            String msg = (ex != null && ex.getMessage() != null)
+                    ? ex.getMessage()
+                    : "인증이 필요합니다.";
+
+            new ObjectMapper().writeValue(
+                    response.getWriter(),
+                    new ApiResponse<>(false, 401, msg)
+            );
         };
+    }
+
+    // ✅ JwtAuthenticationFilter를 Bean으로 등록 (EntryPoint 주입)
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationEntryPoint restAuthenticationEntryPoint) {
+        return new JwtAuthenticationFilter(jwtTokenProvider, redisTemplate, restAuthenticationEntryPoint);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+        http
+                // CORS
+                .cors(withDefaults())
+
+                // 기본 인증/CSRF/폼/로그아웃 비활성화
+                .httpBasic(h -> h.disable())
+                .csrf(c -> c.disable())
+                .formLogin(f -> f.disable())
+                .logout(l -> l.disable())
+                .anonymous(withDefaults())
+
+                // OAuth2 플로우에 한해 세션 필요 → IF_REQUIRED
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+
+                // 요청별 권한
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/auth/callback.html",
+                                "/auth/refresh", "/redis/ping").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+
+                // 전역 EntryPoint (필터/보호자원에서 인증 실패 시 공통 401 JSON)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint()))
+
+                // OAuth2 로그인
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
+                        .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
+                )
+
+                // JWT 필터(Bean) 등록
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 }
 

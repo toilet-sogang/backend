@@ -39,7 +39,7 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "DB에 Refresh Token 없음",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
-    @PostMapping("/auth/refresh")
+    @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody RefreshTokenRequest request) {
