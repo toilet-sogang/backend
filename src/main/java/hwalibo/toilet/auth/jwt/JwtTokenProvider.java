@@ -12,10 +12,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -45,31 +48,45 @@ public class JwtTokenProvider {
 
     // Access Token 생성
     public String createAccessToken(Authentication authentication) {
-        log.info("Creating access token for user: {}", authentication.getName());
 
         User user = extractUserFromAuthentication(authentication);
         String authorities = extractAuthorities(authentication);
         Date validity = calculateTokenValidity(this.accessTokenValidityInMilliseconds);
 
-        return buildToken(user.getUsername(), authorities, validity);
+        // ✅ buildToken에 user.getId()와 user.getUsername()을 명시적으로 전달
+        return buildToken(user.getId().toString(), user.getUsername(), authorities, validity);
     }
 
     // Refresh Token 생성
     public String createRefreshToken() {
         log.info("Creating refresh token");
         Date validity = calculateTokenValidity(this.refreshTokenValidityInMilliseconds);
-        return buildToken(null, null, validity);
+        return buildToken(null, null, null, validity);
     }
 
-    // Authentication 객체 가져오기
+    // Authentication 객체 가져오기 (Stateless)
     public Authentication getAuthentication(String token) {
-        log.info("Parsing JWT token to get authentication");
-
+        log.info("Parsing JWT token to get authentication without DB lookup");
+        token = stripBearerPrefix(token);
         Claims claims = parseClaimsFromToken(token);
-        String[] subjectParts = extractSubjectParts(claims.getSubject());
-        User user = findUser(subjectParts[0], subjectParts[1]);
 
-        return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
+        // 'auth' 클레임이 없으면 Access Token이 아니므로 예외 발생
+        if (claims.get("auth") == null) {
+            throw new InvalidTokenException("권한 정보가 없는 토큰입니다.");
+        }
+
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get("auth").toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        // User.java에 추가한 생성자를 사용하여 객체 생성
+        User principal = new User(
+                Long.parseLong(claims.getSubject()),      // subject에서 User ID 추출
+                claims.get("username", String.class)  // 'username' 클레임에서 이름 추출
+        );
+
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
     // User로부터 Authentication 생성
@@ -93,7 +110,7 @@ public class JwtTokenProvider {
     }
 
     // AccessToken 남은 만료 시간(ms) 조회
-    public long getExpiration(String token) {
+    public long getRemainingTime(String token) {
         try {
             token = stripBearerPrefix(token); // "Bearer " 제거
             Claims claims = Jwts.parserBuilder()
@@ -111,7 +128,6 @@ public class JwtTokenProvider {
             throw new InvalidTokenException("유효하지 않은 토큰입니다.");
         }
     }
-
 
     // ---------------------- Helper Methods ----------------------
 
@@ -140,19 +156,26 @@ public class JwtTokenProvider {
         return new Date(now + validityInMilliseconds);
     }
 
-    private String buildToken(String username, String authorities, Date validity) {
+    private String buildToken(String userId, String username, String authorities, Date validity) {
         JwtBuilder builder = Jwts.builder()
                 .signWith(key, SignatureAlgorithm.HS256)
                 .setExpiration(validity);
 
+        if (userId != null) {
+            // subject에는 User의 ID를 저장 (고유 식별자)
+            builder.setSubject(userId);
+        }
         if (username != null) {
-            builder.setSubject(username)
-                    .claim("auth", authorities);
+            // 'username'이라는 별도 클레임을 만들어 사용자 이름 저장
+            builder.claim("username", username);
+        }
+        if (authorities != null) {
+            // 'auth' 클레임에 권한 정보 저장
+            builder.claim("auth", authorities);
         }
 
         return builder.compact();
     }
-
     private Claims parseClaimsFromToken(String token) {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
@@ -183,4 +206,3 @@ public class JwtTokenProvider {
         return token;
     }
 }
-

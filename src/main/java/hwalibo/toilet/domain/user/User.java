@@ -52,6 +52,11 @@ public class User implements UserDetails {
     // 네이버 'profile_image' URL 하나를 저장할 필드
     private String profile;
 
+    // 이름 업데이트 메서드
+    public void updateName(String newName) {
+        this.name = newName;
+    }
+
     /**
      * 토큰 갱신을 위한 필드와 메서드들
      * */
@@ -64,11 +69,12 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    // 이름 업데이트 메서드
-    public void updateName(String newName) {
-        this.name = newName;
+    // [추가] 토큰에서 stateless 유저 객체를 생성하기 위한 생성자
+    public User(Long id, String username) {
+        this.id = id;
+        this.name = username;
+        this.role = Role.ROLE_USER;
     }
-
 
     // ========= UserDetails 인터페이스 구현  ========== //
 
