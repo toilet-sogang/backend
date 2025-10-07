@@ -13,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -183,20 +182,6 @@ public class JwtTokenProvider {
             log.error("Error parsing JWT token: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid JWT token", e);
         }
-    }
-
-    private String[] extractSubjectParts(String subject) {
-        String[] parts = subject.split("_", 2);
-        if (parts.length != 2) {
-            log.error("Invalid subject in token: {}", subject);
-            throw new IllegalArgumentException("Invalid subject in token: " + subject);
-        }
-        return parts;
-    }
-
-    private User findUser(String provider, String providerId) {
-        return userRepository.findByProviderAndProviderId(provider, providerId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + provider + "_" + providerId));
     }
 
     private String stripBearerPrefix(String token) {
