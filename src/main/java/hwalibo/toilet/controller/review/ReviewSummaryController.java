@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,7 +46,13 @@ public class ReviewSummaryController {
     })
     @GetMapping("/{toiletId}/reviews/summary")
     public ResponseEntity<ApiResponse<ReviewSummaryResponse>> summarize(@PathVariable Long toiletId) {
-        var res = reviewSummaryService.summarizeByToiletId(toiletId);
-        return ResponseEntity.status(res.getCode()).body(res);
+        ReviewSummaryResponse data = reviewSummaryService.summarizeByToiletId(toiletId);
+        ApiResponse<ReviewSummaryResponse> response = new ApiResponse<>(
+                true,
+                HttpStatus.OK.value(), // 200
+                "리뷰 요약 성공",
+                data
+        );
+        return ResponseEntity.ok(response);
     }
 }

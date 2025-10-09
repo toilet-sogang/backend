@@ -4,6 +4,8 @@ import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
+import hwalibo.toilet.exception.review.ReviewNotFoundException;
+import hwalibo.toilet.exception.review.SummaryGenerationException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -58,6 +60,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TokenNotFoundException.class)
     protected ResponseEntity<ApiResponse<?>> handleTokenNotFoundException(TokenNotFoundException e) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    /**
+     * 리뷰 요약 관련 예외 핸들러
+     */
+    @ExceptionHandler(ReviewNotFoundException.class)
+    protected ResponseEntity<ApiResponse<?>> handleReviewNotFoundException(ReviewNotFoundException e) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(SummaryGenerationException.class)
+    protected ResponseEntity<ApiResponse<?>> handleSummaryGenerationException(SummaryGenerationException e) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     // 기타 모든 예외 처리 (500 Internal Server Error)

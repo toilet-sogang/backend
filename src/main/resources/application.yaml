@@ -13,9 +13,14 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+
   jpa:
     hibernate:
-      ddl-auto: update   # 개발 단계는 create/update, 운영은 none
+      ddl-auto: create   # 개발 단계는 create/update, 운영은 none
     properties:
       hibernate:
         format_sql: true
