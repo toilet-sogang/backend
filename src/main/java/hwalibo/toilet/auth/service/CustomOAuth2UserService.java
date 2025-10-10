@@ -51,7 +51,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User saveNewUser(OAuth2UserInfo oAuth2UserInfo) {
+        String username = oAuth2UserInfo.getProvider() + "_" + oAuth2UserInfo.getProviderId();
         User newUser = User.builder()
+                .username(username)
                 .name(oAuth2UserInfo.getName()) // nickname
                 .profile(oAuth2UserInfo.getProfileImageUrl())
                 .provider(oAuth2UserInfo.getProvider())

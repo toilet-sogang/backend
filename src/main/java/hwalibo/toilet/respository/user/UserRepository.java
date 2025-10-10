@@ -10,9 +10,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 최초 소셜 로그인 시 사용 (회원가입 여부 확인)
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
 
-    // JWT 토큰 검증 및 로그아웃 시 사용
-    Optional<User> findByName(String name);
-
     // 토큰 재발급 시 사용
     Optional<User> findByRefreshToken(String refreshToken);
 

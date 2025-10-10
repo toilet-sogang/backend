@@ -85,8 +85,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                // CORS 설정을 WebConfig에 완전히 위임하기 위해 비활성화
-                .cors(c -> c.disable())
+                .cors(withDefaults())
 
                 // 기본 인증/CSRF/폼/로그아웃 비활성화
                 .httpBasic(h -> h.disable())

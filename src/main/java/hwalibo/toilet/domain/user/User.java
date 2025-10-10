@@ -27,7 +27,11 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String username; // "provider_providerId" 형식의 고유 식별자
+
     // 네이버 'nickname'을 저장할 필드
+    @Column(unique = true)
     private String name;
 
     // 네이버 'gender'를 저장할 필드
@@ -70,9 +74,9 @@ public class User implements UserDetails {
     }
 
     // [추가] 토큰에서 stateless 유저 객체를 생성하기 위한 생성자
-    public User(Long id, String username) {
+    public User(Long id, String name) {
         this.id = id;
-        this.name = username;
+        this.name = name;
         this.role = Role.ROLE_USER;
     }
 
@@ -88,10 +92,7 @@ public class User implements UserDetails {
         return null;
     }
 
-    @Override
-    public String getUsername() {
-        return provider + "_" + providerId;
-    }
+    @Override public String getUsername() {return this.username;}
 
     @Override
     public boolean isAccountNonExpired() {

@@ -21,15 +21,13 @@ import java.util.Optional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@DependsOn("ToiletDataLoader")
-//@Profile({"local", "dev"}) // 로컬/개발 환경에서만 실행하려면 주석 해제
+@DependsOn("ToiletDataLoader") // 화장실 데이터가 먼저 로드되도록 순서 지정
 public class DummySeedReviewer {
 
     private final UserRepository userRepository;
     private final ToiletRepository toiletRepository;
     private final ReviewRepository reviewRepository;
 
-    // 필요 시 대상 화장실 ID 변경
     private static final long TARGET_TOILET_ID = 1L;
 
     @PostConstruct
@@ -50,7 +48,7 @@ public class DummySeedReviewer {
             return;
         }
 
-        // 더미 유저 5명 확보/생성 (provider='seed' 네임스페이스)
+        // 더미 유저 5명 확보/생성
         List<User> seeds = ensureSeedUsers();
 
         // 리뷰 10건 생성
@@ -79,19 +77,17 @@ public class DummySeedReviewer {
         for (int i = 0; i < ids.length; i++) {
             String pid = ids[i];
             String name = names[i];
+            String username = provider + "_" + pid; // 👈 [수정] username 생성
 
             User user = userRepository
                     .findByProviderAndProviderId(provider, pid)
                     .orElseGet(() -> userRepository.save(
                             User.builder()
+                                    .username(username) // 👈 [수정] username 필드 설정
                                     .name(name)
                                     .provider(provider)
                                     .providerId(pid)
                                     .role(Role.ROLE_USER)
-                                    .rate(0.0)
-                                    .numReview(0)
-                                    .profile(null)
-                                    .refreshToken(null)
                                     .build()
                     ));
             result.add(user);
@@ -105,11 +101,11 @@ public class DummySeedReviewer {
                 .user(user)
                 .description(desc)
                 .star(star)
-                .photo(new ArrayList<>()) // 사진 제외
+                // photo, tag 필드는 엔티티의 @Builder.Default 등으로 초기화하는 것을 권장
+                // .photo(new ArrayList<>())
                 .good(good)
-                .tag(new ArrayList<>())   // 태그 제외
+                // .tag(new ArrayList<>())
                 .isDis(isDis)
                 .build();
-        // @CreatedDate / @LastModifiedDate는 Auditing으로 자동 설정됨 (@EnableJpaAuditing 필요)
     }
 }
