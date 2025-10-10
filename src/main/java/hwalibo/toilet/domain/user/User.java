@@ -73,12 +73,6 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    // [추가] 토큰에서 stateless 유저 객체를 생성하기 위한 생성자
-    public User(Long id, String name) {
-        this.id = id;
-        this.name = name;
-        this.role = Role.ROLE_USER;
-    }
 
     // ========= UserDetails 인터페이스 구현  ========== //
 

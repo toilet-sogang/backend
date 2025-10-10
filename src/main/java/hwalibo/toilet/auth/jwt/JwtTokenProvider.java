@@ -1,6 +1,7 @@
 package hwalibo.toilet.auth.jwt;
 
 import hwalibo.toilet.auth.CustomOAuth2User;
+import hwalibo.toilet.domain.type.Role;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.respository.user.UserRepository;
@@ -79,11 +80,12 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        // User.java에 추가한 생성자를 사용하여 객체 생성
-        User principal = new User(
-                Long.parseLong(claims.getSubject()),      // subject에서 User ID 추출
-                claims.get("username", String.class)  // 'username' 클레임에서 이름 추출
-        );
+        User principal = User.builder()
+                .id(Long.parseLong(claims.getSubject()))
+                .username(claims.get("username", String.class))
+                .name(claims.get("name", String.class))
+                .role(Role.valueOf((String) authorities.iterator().next().getAuthority()))
+                .build();
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
