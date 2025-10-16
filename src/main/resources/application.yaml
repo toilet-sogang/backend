@@ -20,7 +20,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create   # 개발 단계는 create/update, 운영은 none
+      ddl-auto: update   # 개발 단계는 create/update, 운영은 none
     properties:
       hibernate:
         format_sql: true
