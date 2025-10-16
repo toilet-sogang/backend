@@ -1,0 +1,14 @@
+spring:
+  profiles: prod
+
+# 현재는 EC2:8080 기준 (나중에 도메인/HTTPS로 바꾸면 여기도 교체)
+NAVER_REDIRECT_URI: "http://3.36.148.255:8080/login/oauth2/code/naver"
+
+cors:
+  allowed-origins:
+    - "http://3.36.148.255:8080"
+    - "https://frontend.com"
+
+logging:
+  level:
+    org.springframework.security: INFO

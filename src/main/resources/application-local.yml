@@ -1,0 +1,17 @@
+spring:
+  profiles: local
+
+# 로컬 OAuth2 콜백 (포트/도메인 로컬 기준)
+NAVER_REDIRECT_URI: "http://localhost:8080/login/oauth2/code/naver"
+
+# CORS를 프로퍼티로 뺀 뒤 WebConfig에서 주입해 쓰는 방식을 추천
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+    - "http://localhost:8080"
+    - "http://127.0.0.1:8080"
+
+logging:
+  level:
+    org.springframework.security: INFO

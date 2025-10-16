@@ -1,14 +1,12 @@
 # Workflow name
 name: Hwalibo Project CI/CD
 
-# Conditions for workflow execution
 on:
   push:
-    branches: [ "main" ] # Runs on push events to the main branch
+    branches: [ "main" ]
 
-# Environment variables used in the workflow
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/hwalibo-app # Docker Hub username/image name
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/hwalibo-app
   VERSION: ${{ github.sha }} # Use Git commit hash as the version
 
 jobs:
@@ -73,7 +71,8 @@ jobs:
             docker pull ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
             
             # 4. Create .env file from GitHub Secrets
-            echo "DB_URL=${{ secrets.DB_URL }}" > .env
+            echo "SPRING_PROFILES_ACTIVE=prod" > .env
+            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
@@ -88,8 +87,10 @@ jobs:
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
             echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
 
-            # 5. Create docker-compose.yml file (The content here is correct)
+            # 5. Create docker-compose.yml file (Ensure correct content and use environment variables)
             cat <<EOF > docker-compose.yml
+            version: "3.9"
+
             services:
               app:
                 image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
@@ -116,11 +117,11 @@ jobs:
                   - AWS_ACCESS_KEY_ID=\${AWS_ACCESS_KEY_ID}
                   - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
                   - AWS_S3_BUCKET=\${AWS_S3_BUCKET}
+                restart: unless-stopped
+
               db:
                 image: mysql:8.0.43
                 container_name: hwalibo-db
-                ports:
-                  - "3306:3306"
                 environment:
                   MYSQL_ROOT_PASSWORD: \${DB_PASSWORD}
                   MYSQL_DATABASE: toiletsystem
@@ -137,11 +138,11 @@ jobs:
                   start_period: 40s
                 volumes:
                   - db-data:/var/lib/mysql
+                restart: unless-stopped
+
               redis:
                 image: redis:7.2.5-alpine
                 container_name: hwalibo-redis
-                ports:
-                  - "6379:6379"
                 healthcheck:
                   test: ["CMD", "redis-cli", "ping"]
                   interval: 5s
@@ -149,6 +150,8 @@ jobs:
                   retries: 10
                 volumes:
                   - redis-data:/data
+                restart: unless-stopped
+
             volumes:
               db-data:
               redis-data:
