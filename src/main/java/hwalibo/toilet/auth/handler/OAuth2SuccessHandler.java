@@ -55,7 +55,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();*/
 
-        String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")  // EC2 IP 반영
+        String targetUrl = UriComponentsBuilder.fromUriString("http://3.36.148.255:8080/auth/callback.html")  // EC2 IP 반영
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
