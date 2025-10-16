@@ -43,6 +43,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         user.updateRefreshToken(refreshToken);
         userRepository.save(user);
 
+        log.info("User repository에 Refresh Token 저장 완료");
+
         // 4. 프론트엔드로 리다이렉트할 URL을 동적으로 생성
         /*String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/callback")
                 .queryParam("accessToken", accessToken)
@@ -59,6 +61,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
+
+        log.info("Redirecting to: {}", targetUrl);
 
         // 5. 생성된 URL로 사용자를 리다이렉트
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
