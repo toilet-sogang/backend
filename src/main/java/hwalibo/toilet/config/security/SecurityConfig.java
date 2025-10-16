@@ -95,7 +95,8 @@ public class SecurityConfig {
                 .logout(l -> l.disable())
                 .anonymous(withDefaults())
 
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                //OAuth2 리다이렉트 동안만 세션 사용
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 // 요청별 권한
                 .authorizeHttpRequests(auth -> auth
