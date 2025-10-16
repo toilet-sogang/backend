@@ -73,8 +73,8 @@ public class SecurityConfig {
                 .logout(l -> l.disable())
                 .anonymous(withDefaults())
 
-                // 세션 관리: 세션을 필요할 때만 사용
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
 
                 // 요청별 권한
                 .authorizeHttpRequests(auth -> auth
