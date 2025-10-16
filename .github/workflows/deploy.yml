@@ -66,8 +66,8 @@ jobs:
             # 1. Login to Docker Hub
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
             
-            # 2. Stop and remove existing containers
-            docker-compose down || true
+            # 2. Stop and remove existing containers (Use 'docker compose')
+            docker compose down || true
             
             # 3. Pull the latest image
             docker pull ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
@@ -84,12 +84,11 @@ jobs:
             echo "NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}" >> .env
             echo "NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}" >> .env
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-            # Add S3 variables for future use
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
             echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
-            
-            # 5. Create docker-compose.yml file
+
+            # 5. Create docker-compose.yml file (The content here is correct)
             cat <<EOF > docker-compose.yml
             services:
               app:
@@ -114,7 +113,6 @@ jobs:
                   - NAVER_CLIENT_ID=\${NAVER_CLIENT_ID}
                   - NAVER_CLIENT_SECRET=\${NAVER_CLIENT_SECRET}
                   - OPENAI_API_KEY=\${OPENAI_API_KEY}
-                  # Add S3 environment variables
                   - AWS_ACCESS_KEY_ID=\${AWS_ACCESS_KEY_ID}
                   - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
                   - AWS_S3_BUCKET=\${AWS_S3_BUCKET}
@@ -156,8 +154,8 @@ jobs:
               redis-data:
             EOF
             
-            # 6. Run containers with Docker Compose
-            docker-compose up -d
+            # 6. Run containers with Docker Compose (Use 'docker compose')
+            docker compose up -d
             
             # 7. Prune unused Docker images
             docker image prune -f
