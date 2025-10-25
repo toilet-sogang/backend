@@ -6,6 +6,7 @@ import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
+import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -75,6 +76,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
+    @ExceptionHandler(ToiletNotFoundException.class)
+    protected ResponseEntity<ApiResponse<?>> handleToiletNotFoundException(ToiletNotFoundException e) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
     // 기타 모든 예외 처리 (500 Internal Server Error)
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ApiResponse<?>> handleException(Exception e) {
@@ -90,4 +96,6 @@ public class GlobalExceptionHandler {
         ApiResponse<T> response = new ApiResponse<>(false, status.value(), message, data);
         return ResponseEntity.status(status).body(response);
     }
+
+
 }
