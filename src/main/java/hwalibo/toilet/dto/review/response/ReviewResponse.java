@@ -7,6 +7,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Getter
@@ -46,7 +47,7 @@ public class ReviewResponse {
                 .description(review.getDescription())
                 .star(review.getStar())
                 .tag(tagNames)
-                .photo(review.getPhoto())
+                .photo(Collections.emptyList())
                 .good(review.getGood())
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())

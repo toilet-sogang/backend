@@ -5,6 +5,8 @@ import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
+import hwalibo.toilet.exception.review.AlreadyLikedException;
+import hwalibo.toilet.exception.review.NotLikedException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
 import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
@@ -79,6 +81,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ToiletNotFoundException.class)
     protected ResponseEntity<ApiResponse<?>> handleToiletNotFoundException(ToiletNotFoundException e) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    // 좋아요 중복
+    @ExceptionHandler(AlreadyLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleAlreadyLikedException(AlreadyLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    // 좋아요 취소: 안 눌린 상태
+    @ExceptionHandler(NotLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleNotLikedException(NotLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     // 기타 모든 예외 처리 (500 Internal Server Error)
