@@ -2,26 +2,39 @@ package hwalibo.toilet.controller.station;
 
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.station.request.StationSuggestRequest;
-import hwalibo.toilet.service.station.StationSuggestService;
+import hwalibo.toilet.dto.station.response.StationSearchResponse;
 import hwalibo.toilet.dto.station.response.StationSuggestResponse;
+import hwalibo.toilet.service.station.StationSearchService;
+import hwalibo.toilet.service.station.StationSuggestService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/station")
-@Tag(name = "Station - Suggest")
-public class StationSuggestController {
+@RequiredArgsConstructor
+@Tag(name = "Station")
+public class StationController {
 
+    private final StationSearchService stationSearchService;
     private final StationSuggestService stationSuggestService;
 
-    public StationSuggestController(StationSuggestService stationSuggestService) {
-        this.stationSuggestService = stationSuggestService;
+    @GetMapping("/search")
+    @Operation(summary = "역 검색 결과 조회", security = { @SecurityRequirement(name = "bearerAuth") })
+    public ResponseEntity<ApiResponse<List<StationSearchResponse>>> search(@RequestParam("q") String q) {
+        List<StationSearchResponse> data = stationSearchService.search(q);
+        String message = data.isEmpty() ? "검색 결과가 없습니다." : "검색 성공";
+        return ResponseEntity.ok(new ApiResponse<>(true, 200, message, data));
     }
 
     @PostMapping("/suggest")
@@ -34,5 +47,4 @@ public class StationSuggestController {
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "가까운 역 3개 반환 성공", data));
     }
 }
-
 
