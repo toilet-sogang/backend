@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
+/*@Getter
 @Builder
 public class ReviewResponse {
 
@@ -30,9 +30,9 @@ public class ReviewResponse {
 
     private Boolean isDis; // ERD의 is_dis 필드에 해당
 
-    /**
+    *//**
      * Review 엔티티를 DTO로 변환하는 정적 팩토리 메서드
-     */
+     *//*
     public static ReviewResponse from(Review review) {
         // ReviewTag Enum 리스트를 String 리스트로 변환
         List<String> tagNames = review.getTag().stream()
@@ -53,5 +53,5 @@ public class ReviewResponse {
                 .isDis(review.isDis())
                 .build();
     }
-}
+}*/
 

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Slice;
 
 import java.util.ArrayList;
 import java.util.List;
+/*
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,3 +42,4 @@ public class PhotoReviewListResponse {
 }
 
 
+*/
