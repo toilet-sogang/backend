@@ -1,4 +1,4 @@
-package hwalibo.toilet.config.api.openAi;
+package hwalibo.toilet.config.openAi;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;

@@ -61,6 +61,17 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
 # CORS 설정
 cors:
   allowed-origins:

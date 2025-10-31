@@ -13,6 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -44,10 +45,10 @@ public class Review {
     private Double star;
 
     // S3 이미지 URL 리스트 (1~2개 저장)
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "review_photos", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "photo_url")
-    private List<String> photo;
+    @Builder.Default
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC") // 이미지 순서 정렬
+    private List<ReviewImage> images = new ArrayList<>();
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
     private Integer good; // '좋아요' 수
@@ -67,5 +68,4 @@ public class Review {
 
     @LastModifiedDate // 엔티티 수정 시 시간 자동 저장
     private LocalDateTime updatedAt;
-
 }

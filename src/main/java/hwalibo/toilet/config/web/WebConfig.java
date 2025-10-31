@@ -12,8 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:8080", "http://127.0.0.1:8080",
-                        "http://localhost:3000", "http://127.0.0.1:3000",
-                        "https://frontend.com",
+                        "http://localhost:3000", "http://127.0.0.1:3000", // 로컬 프론트엔드 주소
+                        "https://frontend.com", //배포될 프론트엔드 주소
                         "http://3.36.148.255:8080"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
