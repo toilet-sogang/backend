@@ -2,6 +2,7 @@ package hwalibo.toilet.service.station;
 
 import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.dto.station.request.StationSuggestRequest;
+import hwalibo.toilet.dto.station.response.StationSearchResponse;
 import hwalibo.toilet.dto.station.response.StationSuggestResponse;
 import hwalibo.toilet.respository.toilet.ToiletRepository;
 import org.springframework.stereotype.Service;
@@ -12,12 +13,19 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class StationSuggestService {
+public class StationService {
 
     private final ToiletRepository toiletRepository;
 
-    public StationSuggestService(ToiletRepository toiletRepository) {
+    public StationService(ToiletRepository toiletRepository) {
         this.toiletRepository = toiletRepository;
+    }
+
+    public List<StationSearchResponse> search(String keyword) {
+        List<Toilet> toilets = toiletRepository.findByNameContaining(keyword);
+        return toilets.stream()
+                .map(t -> StationSearchResponse.from(t, t.getStar(), t.getNumReview()))
+                .collect(Collectors.toList());
     }
 
     public StationSuggestResponse suggest(StationSuggestRequest request) {
@@ -50,5 +58,4 @@ public class StationSuggestService {
         return R * c;
     }
 }
-
 
