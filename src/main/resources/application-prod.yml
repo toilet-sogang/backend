@@ -75,7 +75,7 @@ cloud:
 # CORS 설정
 cors:
   allowed-origins:
-    - "http://3.36.148.255:8080"
+    - "https://hwalibo-backend.duckdns.org"
     - "https://frontend.com"
 
 logging:
