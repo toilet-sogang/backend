@@ -14,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:8080", "http://127.0.0.1:8080",
                         "http://localhost:3000", "http://127.0.0.1:3000", // 로컬 프론트엔드 주소
                         "https://frontend.com", //배포될 프론트엔드 주소
-                        "http://3.36.148.255:8080"
+                        "http://hwalibo-backend.duckdns.org"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*") // 모든 헤더 허용
