@@ -57,7 +57,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();*/
 
-        String targetUrl = UriComponentsBuilder.fromUriString("http://hwalibo-backend.duckdns.org/auth/callback.html")  // EC2 IP 반영
+        String targetUrl = UriComponentsBuilder.fromUriString("https://hwalibo-backend.duckdns.org/auth/callback.html")  // EC2 IP 반영
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
