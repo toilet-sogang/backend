@@ -4,8 +4,11 @@ import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
+import hwalibo.toilet.exception.review.AlreadyLikedException;
+import hwalibo.toilet.exception.review.NotLikedException;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
+import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -73,6 +76,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SummaryGenerationException.class)
     protected ResponseEntity<ApiResponse<?>> handleSummaryGenerationException(SummaryGenerationException e) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    //ToiletNotFoundException
+    @ExceptionHandler(ToiletNotFoundException.class)
+    protected ResponseEntity<ApiResponse<?>> handleToiletNotFoundException(ToiletNotFoundException e) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    //AlreadyLikedException
+    @ExceptionHandler(AlreadyLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleAlreadyLikedException(AlreadyLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    //NotLikedException
+    @ExceptionHandler(NotLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleNotLikedException(NotLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     // 기타 모든 예외 처리 (500 Internal Server Error)

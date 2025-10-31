@@ -1,4 +1,4 @@
-package hwalibo.toilet.dto.statiion.request;
+package hwalibo.toilet.dto.station.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

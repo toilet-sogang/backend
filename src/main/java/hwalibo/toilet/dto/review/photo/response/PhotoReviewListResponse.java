@@ -9,7 +9,6 @@ import org.springframework.data.domain.Slice;
 
 import java.util.ArrayList;
 import java.util.List;
-/*
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,16 +22,8 @@ public class PhotoReviewListResponse {
     public static PhotoReviewListResponse fromReviews(Slice<Review> reviewSlice) {
         List<PhotoReview> photoDtos = new ArrayList<>();
 
-        // 각 리뷰에 포함된 사진 URL들을 별도의 PhotoReviewDto 객체로 풀어주는 과정
-        reviewSlice.getContent().forEach(review -> {
-            review.getPhoto().forEach(url -> {
-                photoDtos.add(PhotoReview.builder()
-                        .photoUrl(url)
-                        .reviewId(review.getId())
-                        .toiletId(review.getToilet().getId())
-                        .build());
-            });
-        });
+        // 현재 Review 엔티티에 사진 필드가 없어 빈 리스트로 반환합니다.
+        reviewSlice.getContent(); // no-op
 
         return PhotoReviewListResponse.builder()
                 .content(photoDtos)
@@ -41,5 +32,3 @@ public class PhotoReviewListResponse {
     }
 }
 
-
-*/
