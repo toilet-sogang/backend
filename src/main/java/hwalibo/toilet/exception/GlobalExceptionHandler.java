@@ -65,14 +65,13 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
-    /**
-     * 리뷰 요약 관련 예외 핸들러
-     */
+    //ReviewNotFoundException
     @ExceptionHandler(ReviewNotFoundException.class)
     protected ResponseEntity<ApiResponse<?>> handleReviewNotFoundException(ReviewNotFoundException e) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    //SummaryGenerationException
     @ExceptionHandler(SummaryGenerationException.class)
     protected ResponseEntity<ApiResponse<?>> handleSummaryGenerationException(SummaryGenerationException e) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
