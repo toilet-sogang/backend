@@ -1,4 +1,4 @@
-package hwalibo.toilet.service.review;
+/*package hwalibo.toilet.service.review;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.user.User;
@@ -26,4 +26,4 @@ public class ReviewService {
 
     }
 
-}
+}*/

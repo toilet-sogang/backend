@@ -1,4 +1,4 @@
-package hwalibo.toilet.controller.review;
+/*package hwalibo.toilet.controller.review;
 
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
@@ -26,9 +26,11 @@ public class ReviewListController {
             description = "특정 화장실의 상세 정보 조회.",
             security = { @SecurityRequirement(name = "bearerAuth") } // ✅ JWT 필요 → 🔒 표시됨
     )
-    @GetMapping("{/id}/reviews")
+   @GetMapping("{/id}/reviews")
     public ResponseEntity<ApiResponse<ReviewListResponse>> reviewList(
             @AuthenticationPrincipal User loginUser, @PathVariable("id") Long toiletId){
 
     }
 }
+*/
+

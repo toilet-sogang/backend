@@ -13,6 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -36,6 +37,11 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    //일대다 관계 설정: Review(1): ReviewImage(N)
+    @OneToMany(mappedBy="review",cascade=CascadeType.ALL,orphanRemoval=true,fetch=FetchType.LAZY)
+    @Builder.Default
+    private List<ReviewImage> reviewImages=new ArrayList<>();
 
     @Column(columnDefinition = "TEXT") // 더 긴 텍스트를 저장할 수 있도록 TEXT 타입으로 설정
     private String description;

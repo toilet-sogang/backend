@@ -1,7 +1,12 @@
 package hwalibo.toilet.dto.review.response;
+import hwalibo.toilet.domain.review.Review;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import hwalibo.toilet.domain.review.Review;
+import hwalibo.toilet.domain.review.ReviewImage;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -30,6 +35,7 @@ public class ReviewResponse {
 
     private Boolean isDis; // ERD의 is_dis 필드에 해당
 
+
     /**
      * Review 엔티티를 DTO로 변환하는 정적 팩토리 메서드
      */
@@ -37,6 +43,10 @@ public class ReviewResponse {
         // ReviewTag Enum 리스트를 String 리스트로 변환
         List<String> tagNames = review.getTag().stream()
                 .map(Enum::name)
+                .collect(Collectors.toList());
+        List<String> photoUrl=review.getReviewImages().stream()
+                .sorted(Comparator.comparing(ReviewImage::getSortOrder))
+                .map(ReviewImage::getUrl)
                 .collect(Collectors.toList());
 
         return ReviewResponse.builder()
@@ -46,7 +56,7 @@ public class ReviewResponse {
                 .description(review.getDescription())
                 .star(review.getStar())
                 .tag(tagNames)
-                .photo(review.getPhoto())
+                .photo(photoUrl)
                 .good(review.getGood())
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt())
