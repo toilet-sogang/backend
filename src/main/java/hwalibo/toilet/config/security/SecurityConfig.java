@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -41,37 +42,15 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint restAuthenticationEntryPoint() {
         return (HttpServletRequest request, HttpServletResponse response, AuthenticationException ex) -> {
-            // --- CORS 헤더 설정  ---
-            String origin = request.getHeader("Origin");
-            if (origin != null) {
-                response.setHeader("Access-Control-Allow-Origin", origin);
-                response.setHeader("Vary", "Origin");
-            }
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.setHeader("Access-control-allow-headers",
-                    "Authorization, Content-Type, X-Requested-With, Access-Token, Refresh-Token");
-            response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-            response.setHeader("Access-Control-Expose-Headers",
-                    "Authorization, Access-Token, Refresh-Token");
-            // --- ------------------------------------ ---
-
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
 
-
-            // 1. 기본 에러 메시지를 "로그인이 필요합니다."로 설정
             String errorMessage = "로그인이 필요합니다.";
-
-            // 2. 만약 예외에 메시지가 있고, 그게 우리가 바꾸고 싶은 기본 메시지가 아니라면
-            //    (예: "로그아웃된 사용자입니다." 같은 커스텀 메시지라면) 그 메시지를 사용
             if (ex != null && ex.getMessage() != null && !ex.getMessage().equalsIgnoreCase("Full authentication is required to access this resource")) {
                 errorMessage = ex.getMessage();
             }
 
-            new ObjectMapper().writeValue(
-                    response.getWriter(),
-                    new ApiResponse<>(false, 401, errorMessage) // 최종 메시지를 담아 응답
-            );
+            new ObjectMapper().writeValue(response.getWriter(), new ApiResponse<>(false, 401, errorMessage));
         };
     }
 

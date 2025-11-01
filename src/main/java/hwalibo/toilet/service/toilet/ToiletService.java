@@ -29,4 +29,7 @@ public class ToiletService {
 
         return ToiletDetailResponse.of(toilet);
     }
+
 }
+
+

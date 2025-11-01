@@ -4,6 +4,8 @@ import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
+import hwalibo.toilet.exception.review.AlreadyLikedException;
+import hwalibo.toilet.exception.review.NotLikedException;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
 import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
@@ -63,22 +65,36 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
-    /**
-     * 리뷰 요약 관련 예외 핸들러
-     */
+    //ReviewNotFoundException
     @ExceptionHandler(ReviewNotFoundException.class)
     protected ResponseEntity<ApiResponse<?>> handleReviewNotFoundException(ReviewNotFoundException e) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
+    //SummaryGenerationException
     @ExceptionHandler(SummaryGenerationException.class)
     protected ResponseEntity<ApiResponse<?>> handleSummaryGenerationException(SummaryGenerationException e) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
+
+    //ToiletNotFoundException
     @ExceptionHandler(ToiletNotFoundException.class)
     protected ResponseEntity<ApiResponse<?>> handleToiletNotFoundException(ToiletNotFoundException e) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+
+    //AlreadyLikedException
+    @ExceptionHandler(AlreadyLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleAlreadyLikedException(AlreadyLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    //NotLikedException
+    @ExceptionHandler(NotLikedException.class)
+    protected ResponseEntity<ApiResponse<?>> handleNotLikedException(NotLikedException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 
     // 기타 모든 예외 처리 (500 Internal Server Error)

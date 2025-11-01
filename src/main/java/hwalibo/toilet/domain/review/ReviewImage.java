@@ -1,6 +1,5 @@
 package hwalibo.toilet.domain.review;
 
-import hwalibo.toilet.domain.review.Review;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,3 +31,4 @@ public class ReviewImage {
         this.url = newUrl;
     }
 }
+

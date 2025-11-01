@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: hwalibo-app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"              # 외부로 노출되는 건 앱만
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      # === DB / Redis (내부 네트워크 호스트네임 사용) ===
+      - SPRING_DATASOURCE_URL=${DB_URL}           # 예: jdbc:mysql://db:3306/toiletsystem?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      - SPRING_DATA_REDIS_HOST=${REDIS_HOST}      # 예: redis
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT}      # 예: 6379
+
+      # === JWT / OAuth2 ===
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_VALIDITY=${JWT_ACCESS_VALIDITY}
+      - JWT_REFRESH_VALIDITY=${JWT_REFRESH_VALIDITY}
+      - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
+      - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      # ↓ prod 프로필에서 application-prod.yml로 고정했으면 생략 가능
+      # - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
+
+      # === 기타 ===
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TZ=Asia/Seoul
+
+      # AWS 크리덴셜은 가능하면 EC2 Role 사용 권장(키 노출 위험↓)
+      # 필요 시 .env에서만 주입
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0.43
+    container_name: hwalibo-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: toiletsystem
+      TZ: Asia/Seoul
+    command: >
+      --default-authentication-plugin=caching_sha2_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 40s
+    volumes:
+      - db-data:/var/lib/mysql
+    # ⚠️ 외부 포트 공개 금지 (내부 네트워크로만 접근)
+    # ports: ["3306:3306"]  # 제거
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2.5-alpine
+    container_name: hwalibo-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - redis-data:/data
+    # ⚠️ 외부 포트 공개 금지
+    # ports: ["6379:6379"]  # 제거
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  redis-data:

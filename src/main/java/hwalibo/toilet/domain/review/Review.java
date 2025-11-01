@@ -38,16 +38,17 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    //일대다 관계 설정: Review(1): ReviewImage(N)
-    @OneToMany(mappedBy="review",cascade=CascadeType.ALL,orphanRemoval=true,fetch=FetchType.LAZY)
-    @Builder.Default
-    private List<ReviewImage> reviewImages=new ArrayList<>();
-
     @Column(columnDefinition = "TEXT") // 더 긴 텍스트를 저장할 수 있도록 TEXT 타입으로 설정
     private String description;
 
     @Column(nullable = false)
     private Double star;
+
+    // S3 이미지 URL 리스트 (1~2개 저장)
+    @Builder.Default
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC") // 이미지 순서 정렬
+    private List<ReviewImage> reviewImages = new ArrayList<>();
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
     private Integer good; // '좋아요' 수
@@ -67,5 +68,4 @@ public class Review {
 
     @LastModifiedDate // 엔티티 수정 시 시간 자동 저장
     private LocalDateTime updatedAt;
-
 }
