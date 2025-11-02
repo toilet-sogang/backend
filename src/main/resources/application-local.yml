@@ -1,10 +1,23 @@
-spring:
-  config:
-    activate:
-      on-profile: local # 로컬 환경 활성화
-
+        spring:
   application:
     name: demo
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 25MB
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+      region:
+          static: ap-northeast-2
+      stack:
+        auto: false
 
   data:
     redis:
@@ -24,7 +37,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create   # 개발 단계는 create/update, 운영은 none
     properties:
       hibernate:
         format_sql: true
@@ -39,8 +52,11 @@ spring:
             client-secret: ${NAVER_CLIENT_SECRET}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/naver"  # 로컬 환경에 맞는 redirect-uri
-            scope: [nickname, profile_image, gender]
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - nickname
+              - profile_image
+              - gender
             client-name: Naver
         provider:
           naver:
@@ -54,33 +70,14 @@ jwt:
   access-token-validity-in-seconds: ${JWT_ACCESS_VALIDITY}
   refresh-token-validity-in-seconds: ${JWT_REFRESH_VALIDITY}
 
+openai:
+  api-key: ${OPENAI_API_KEY}
+  chat-model: gpt-4o-mini
+  timeout-ms: 10000
+
 springdoc:
   swagger-ui:
     persistAuthorization: false
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
-
-cloud:
-  aws:
-    credentials:
-      access-key: ${AWS_ACCESS_KEY_ID}
-      secret-key: ${AWS_SECRET_ACCESS_KEY}
-    s3:
-      bucket: ${AWS_S3_BUCKET}
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
-
-# CORS 설정 (로컬 개발에 필요한 Origin 추가)
-cors:
-  allowed-origins:
-    - "http://localhost:3000"
-    - "http://127.0.0.1:3000"
-    - "http://localhost:8080"
-    - "http://127.0.0.1:8080"
-
-logging:
-  level:
-    org.springframework.security: INFO
