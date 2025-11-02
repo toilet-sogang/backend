@@ -11,53 +11,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "cloud.aws")
 public class S3Config {
 
-    private final Credentials credentials = new Credentials();
+    // application.yml의 값을 Java 변수로 주입받습니다.
+    @Value("${spring.cloud.aws.credentials.access-key}")
+    private String accessKey;
+
+    @Value("${spring.cloud.aws.credentials.secret-key}")
+    private String secretKey;
+
+    @Value("${spring.cloud.aws.region.static}")
     private String region;
-
-    public Credentials getCredentials() {
-        return credentials;
-    }
-
-    public String getRegion() {
-        return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public static class Credentials {
-        private String accessKey;
-        private String secretKey;
-
-        public String getAccessKey() {
-            return accessKey;
-        }
-
-        public void setAccessKey(String accessKey) {
-            this.accessKey = accessKey;
-        }
-
-        public String getSecretKey() {
-            return secretKey;
-        }
-
-        public void setSecretKey(String secretKey) {
-            this.secretKey = secretKey;
-        }
-    }
 
     @Bean
     public AmazonS3 amazonS3Client() {
-        AWSCredentials credentials =
-                new BasicAWSCredentials(getCredentials().getAccessKey(), getCredentials().getSecretKey());
+        // yml에서 읽어온 accessKey와 secretKey 변수를 사용합니다.
+        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
 
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(getRegion())
+                .withRegion(region)
                 .build();
     }
 }

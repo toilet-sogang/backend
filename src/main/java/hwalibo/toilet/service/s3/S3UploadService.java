@@ -26,7 +26,7 @@ import java.util.UUID;
 public class S3UploadService {
     private final AmazonS3 amazonS3;
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
     public List<String> uploadAll(List<MultipartFile> files,String dirName) {
@@ -43,8 +43,8 @@ public class S3UploadService {
 
                 //S3 업로드
                 try (InputStream is = f.getInputStream()) {
-                    PutObjectRequest req = new PutObjectRequest(bucket, key, is, meta)
-                            .withCannedAcl(CannedAccessControlList.PublicRead);
+                    PutObjectRequest req = new PutObjectRequest(bucket, key, is, meta);
+                            //.withCannedAcl(CannedAccessControlList.PublicRead);
                     amazonS3.putObject(req);
                 }
                 urls.add(amazonS3.getUrl(bucket, key).toString());
