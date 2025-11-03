@@ -1,8 +1,11 @@
 package hwalibo.toilet.controller.review;
 
+import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
+import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
+import hwalibo.toilet.dto.review.response.ReviewCreateResponse;
 import hwalibo.toilet.service.review.ReviewPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,6 +30,15 @@ import java.util.List;
 @Validated
 public class ReviewPostController {
     private final ReviewPostService reviewPostService;
+
+    @Operation(summary="리뷰 업로드", description="리뷰 업로드하기", security={ @SecurityRequirement(name = "bearerAuth")} )
+    @PostMapping(value="/{toiletId}/reviews")
+    public ResponseEntity<ApiResponse<ReviewCreateResponse>> uploadReview(@AuthenticationPrincipal User loginUser,
+                                                                          @PathVariable Long toiletId,
+                                                                          @RequestBody ReviewCreateRequest request){
+        ReviewCreateResponse data=reviewPostService.uploadReview(loginUser,request,toiletId);
+        return ResponseEntity.ok(new ApiResponse<ReviewCreateResponse>(true,HttpStatus.CREATED.value(),"리뷰가 성공적으로 등록되었습니다.",data));
+    }
 
     @Operation(
             summary="리뷰 이미지 업로드",

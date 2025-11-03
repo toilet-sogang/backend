@@ -69,7 +69,8 @@ public class UserReviewController {
     public ResponseEntity<ApiResponse<ReviewPhotoUpdateResponse>> updateImage(@AuthenticationPrincipal User loginUser,
                                                                               @PathVariable Long reviewId,
                                                                               @Schema(description = "삭제할 ID 정보 (JSON)")
-                                                                                  @RequestPart(value = "request", required = false) String requestJson, @Valid @Size(min=0,max=2)@RequestPart(value="images",required = false) List<MultipartFile> images) throws java.io.IOException{
+                                                                                  @RequestPart(value = "request", required = false) String requestJson,
+                                                                              @Valid @Size(min=0,max=2)@RequestPart(value="images",required = false) List<MultipartFile> images) throws java.io.IOException{
         //swagger가 json이 아니라 string으로 인식하기에 string으로 받고 json에서 dto로 변환
         ReviewPhotoUpdateRequest request;
         if(requestJson != null) {

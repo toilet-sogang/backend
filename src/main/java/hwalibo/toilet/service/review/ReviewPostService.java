@@ -2,10 +2,14 @@ package hwalibo.toilet.service.review;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
+import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
+import hwalibo.toilet.dto.review.response.ReviewCreateResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
+import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.service.s3.S3UploadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +27,23 @@ public class ReviewPostService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final S3UploadService s3UploadService;
-
+    private final ToiletRepository toiletRepository;
 
     @Transactional
+    //리뷰 글 작성
+    public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request,Long toiletId){
+
+        Toilet toilet=toiletRepository.findById(toiletId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
+
+        Review review=request.toEntity(loginUser,toilet);
+
+        reviewRepository.save(review);
+        return ReviewCreateResponse.of(review);
+    }
+
+    @Transactional
+    //이미지 업로드
     public PhotoUploadResponse uploadImage(User loginUser,Long reviewId, List< MultipartFile > images) {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");

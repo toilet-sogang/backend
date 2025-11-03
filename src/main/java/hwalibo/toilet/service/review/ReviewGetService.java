@@ -9,6 +9,7 @@ import hwalibo.toilet.respository.review.ReviewRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewGetService {
     private final ReviewRepository reviewRepository;
+
+    @Transactional(readOnly = true)
     public ReviewListResponse getReviewList(User loginUser, Long toiletId, SortType sortType){
         if(loginUser==null){
             throw new SecurityException("유효하지 않은 토큰입니다.");
