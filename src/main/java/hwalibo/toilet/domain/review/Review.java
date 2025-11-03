@@ -44,7 +44,7 @@ public class Review {
     @Column(nullable = false)
     private Double star;
 
-    // S3 이미지 URL 리스트 (1~2개 저장)
+    // S3 이미지 URL 리스트 (0~2개 저장)
     @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC, id ASC") // 이미지 순서 정렬

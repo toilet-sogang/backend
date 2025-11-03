@@ -3,7 +3,7 @@ package hwalibo.toilet.controller.review;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
-import hwalibo.toilet.service.review.ReviewUploadService;
+import hwalibo.toilet.service.review.ReviewPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +25,8 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
-public class ReviewUploadController {
-    private final ReviewUploadService reviewUploadService;
+public class ReviewPostController {
+    private final ReviewPostService reviewPostService;
 
     @Operation(
             summary="리뷰 이미지 업로드",
@@ -37,7 +37,7 @@ public class ReviewUploadController {
     public ResponseEntity<ApiResponse<PhotoUploadResponse>> uploadImage(@AuthenticationPrincipal User loginUser,
                                                                         @PathVariable Long reviewId,
                                                                         @Valid@Size(min=0,max=2) @RequestPart("images")   List<MultipartFile> images){
-        PhotoUploadResponse data=reviewUploadService.uploadImage(loginUser,reviewId,images);
+        PhotoUploadResponse data= reviewPostService.uploadImage(loginUser,reviewId,images);
         return ResponseEntity.ok(new ApiResponse<PhotoUploadResponse>(true, HttpStatus.CREATED.value(),  "이미지 업로드 성공",data));
 
     }

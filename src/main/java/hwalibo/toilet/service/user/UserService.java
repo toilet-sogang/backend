@@ -92,10 +92,12 @@ public class UserService {
         Review review=reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
 
+        //user가 리뷰 작성자 맞는지 검증
         if(!review.getUser().getId().equals(loginUser.getId())){
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
 
+        //삭제할 이미지가 있는 경우
         List<Long>deleteId;
         if(request!=null)deleteId=request.getDeletedImageIds();
         else deleteId=null;
@@ -105,7 +107,9 @@ public class UserService {
 
             for (ReviewImage image : imagesToDelete) {
                 if (image.getReview().getId().equals(reviewId)) {
+                    //s3 삭제
                     s3UploadService.delete(image.getUrl());
+                    //repository 삭제
                     reviewImageRepository.delete(image);
                     review.getReviewImages().remove(image);
                     log.info("S3및 DB에서 이미지 삭제 완료:{}", image.getUrl());
@@ -116,12 +120,14 @@ public class UserService {
             int currentImageCount=review.getReviewImages().size();
             int newImageCount=(newImages!=null)?newImages.size():0;
 
+            //이미지가 2개를 넘는 경우 exception
             if(currentImageCount+newImageCount>2){
                 throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
             }
 
             List<String> uploadedUrls=new ArrayList<>();
 
+            //추가 이미지 s3 등록
             if(newImageCount>0){
                 uploadedUrls=s3UploadService.uploadAll(newImages,"reviews");
             }
@@ -129,6 +135,7 @@ public class UserService {
             int nextOrder=review.getReviewImages().stream()
                     .mapToInt(ReviewImage::getSortOrder).max().orElse(-1)+1;
 
+            //업로드 할 사진들 reviewImage list 생성
             List<ReviewImage> imagesToSave = new ArrayList<>();
             for(String url: uploadedUrls){
                 imagesToSave.add(ReviewImage.builder()
@@ -139,6 +146,7 @@ public class UserService {
             }
 
             if(!imagesToSave.isEmpty()) {
+                //repository 저장 성공
                 reviewImageRepository.saveAll(imagesToSave);
                 review.getReviewImages().addAll(imagesToSave);
                 log.info("새 이미지 저장 성공");

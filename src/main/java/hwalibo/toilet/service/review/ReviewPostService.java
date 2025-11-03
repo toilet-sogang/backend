@@ -4,7 +4,6 @@ import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
-import hwalibo.toilet.dto.review.photo.response.ReviewPhotoUpdateResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.service.s3.S3UploadService;
@@ -20,7 +19,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ReviewUploadService {
+public class ReviewPostService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final S3UploadService s3UploadService;

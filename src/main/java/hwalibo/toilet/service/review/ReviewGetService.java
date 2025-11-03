@@ -1,0 +1,54 @@
+package hwalibo.toilet.service.review;
+
+import hwalibo.toilet.domain.review.Review;
+import hwalibo.toilet.domain.type.SortType;
+import hwalibo.toilet.domain.user.User;
+import hwalibo.toilet.dto.review.response.ReviewListResponse;
+import hwalibo.toilet.dto.review.response.ReviewResponse;
+import hwalibo.toilet.respository.review.ReviewRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+
+
+@Service
+@RequiredArgsConstructor
+public class ReviewGetService {
+    private final ReviewRepository reviewRepository;
+    public ReviewListResponse getReviewList(User loginUser, Long toiletId, SortType sortType){
+        if(loginUser==null){
+            throw new SecurityException("유효하지 않은 토큰입니다.");
+        }
+
+        List<Review> reviews;
+        switch(sortType) {
+            case RATING:
+                //별점순 정렬
+                reviews=reviewRepository.findByToiletId_OrderByRating(toiletId);
+                break;
+            case HANDICAPPED:
+                //장애인 화장실 리뷰만 보기
+                    reviews=reviewRepository.findByToiletId_HandicappedOnly(toiletId);
+            case LATEST:
+            default:
+            //toiletId로 리뷰 찾기( 최신순 정렬)
+            reviews = reviewRepository.findByToiletId_OrderByLatest(toiletId);
+
+        }
+        if (reviews.isEmpty()) {
+            throw new EntityNotFoundException("해당 화장실에 리뷰가 없습니다.");
+        }
+
+
+        List<ReviewResponse> responseList = reviews.stream()
+                .map(ReviewResponse::from)
+                .collect(Collectors.toList());
+
+        return new ReviewListResponse(responseList);
+    }
+}

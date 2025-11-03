@@ -22,6 +22,7 @@ public class ReviewResponse {
     private Long id;
     private Long userId;
     private String userName;
+    private String userPhoto;
     private String description;
     private Double star;
     private List<String> tag;
@@ -54,6 +55,7 @@ public class ReviewResponse {
                 .id(review.getId())
                 .userId(review.getUser().getId())
                 .userName(review.getUser().getName())
+                .userPhoto(review.getUser().getProfile())
                 .description(review.getDescription())
                 .star(review.getStar())
                 .tag(tagNames)
