@@ -86,7 +86,7 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
             echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
-            
+
             # 5. Create docker-compose.yml file (Ensure correct content and use environment variables)
             cat <<EOF > docker-compose.yml
             version: "3.9"
@@ -103,8 +103,7 @@ jobs:
                   redis:
                     condition: service_healthy
                 environment:
-                  - SPRING_PROFILES_ACTIVE=prod
-                  - SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
+                  - SPRING_DATASOURCE_URL=\${DB_URL}
                   - SPRING_DATASOURCE_USERNAME=\${DB_USERNAME}
                   - SPRING_DATASOURCE_PASSWORD=\${DB_PASSWORD}
                   - SPRING_DATA_REDIS_HOST=\${REDIS_HOST}
@@ -119,7 +118,7 @@ jobs:
                   - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
                   - AWS_S3_BUCKET=\${AWS_S3_BUCKET}
                 restart: unless-stopped
-            
+
               db:
                 image: mysql:8.0.43
                 container_name: hwalibo-db
