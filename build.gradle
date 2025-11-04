@@ -12,6 +12,7 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
+	sourceCompatibility = '21'
 }
 
 configurations {
@@ -37,6 +38,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	compileOnly 'org.projectlombok:lombok'

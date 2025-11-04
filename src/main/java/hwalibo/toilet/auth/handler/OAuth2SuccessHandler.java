@@ -52,15 +52,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .build().toUriString();*/
 
         //개발용: 주석 풀기
-        /*String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
-                .build().toUriString();*/
-
-        String targetUrl = UriComponentsBuilder.fromUriString("https://hwalibo-backend.duckdns.org/auth/callback.html")  // EC2 IP 반영
+        String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
+
+        /*String targetUrl = UriComponentsBuilder.fromUriString("https://hwalibo-backend.duckdns.org/auth/callback.html")  // EC2 IP 반영
+                .queryParam("accessToken", accessToken)
+                .queryParam("refreshToken", refreshToken)
+                .build().toUriString();*/
 
         log.info("Redirecting to: {}", targetUrl);
 

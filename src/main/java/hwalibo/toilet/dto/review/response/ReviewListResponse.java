@@ -13,7 +13,7 @@ public class ReviewListResponse {
 
     private final List<ReviewResponse> reviews;
 
-    public ReviewListResponse(List<ReviewResponse> reviews) {
+    public ReviewListResponse (List<ReviewResponse> reviews) {
         this.reviews = reviews;
     }
 }

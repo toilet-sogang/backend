@@ -1,24 +1,37 @@
 package hwalibo.toilet.dto.review.photo.response;
 
-
+import hwalibo.toilet.domain.review.ReviewImage;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "리뷰 이미지 업로드 최종 응답 데이터")
 public class PhotoUploadResponse {
 
-    private List<String> createdPhotoUrls;
+    // [!] 필드명을 명세서의 키인 "createdPhotos"에 맞춥니다.
+    private List<PhotoUrlResponse> createdPhotos;
 
-    // Service Layer에서 생성된 URL 리스트를 받아 DTO를 생성합니다.
-    public static PhotoUploadResponse of(List<String> urls) {
+
+    // Service Layer의 List<String> URL들을 Response DTO로 변환하는 팩토리 메서드
+    public static PhotoUploadResponse of(List<ReviewImage> savedImage) {
+        List<PhotoUrlResponse> photoResponses = savedImage.stream()
+                // String URL -> PhotoUrlResponse 객체로 변환
+                .map(image -> PhotoUrlResponse.builder()
+                        .photoId(image.getId()) // photoId 필드 추가
+                        .photoUrl(image.getUrl())
+                        .build())
+                .collect(Collectors.toList());
+
         return PhotoUploadResponse.builder()
-                .createdPhotoUrls(urls)
+                .createdPhotos(photoResponses)
                 .build();
     }
 }

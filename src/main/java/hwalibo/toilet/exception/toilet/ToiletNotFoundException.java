@@ -5,3 +5,4 @@ public class ToiletNotFoundException extends RuntimeException {
         super("해당 화장실을 찾을 수 없습니다.");
     }
 }
+
