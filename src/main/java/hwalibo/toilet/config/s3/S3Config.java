@@ -13,13 +13,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class S3Config {
 
-    @Value("${AWS_ACCESS_KEY_ID}")
+    @Value("${cloud.aws.credentials.access-key}")
     private String accessKey;
 
-    @Value("${AWS_SECRET_ACCESS_KEY}")
+    @Value("${cloud.aws.credentials.secret-key}")
     private String secretKey;
 
-    @Value("${AWS_REGION}")
+    // ⬇️⬇️⬇️ 이 코드가 맞습니다! ⬇️⬇️⬇️
+    @Value("${cloud.aws.region.static}")
     private String region;
 
     @Bean
@@ -28,7 +29,7 @@ public class S3Config {
 
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(region) // 3. 주입받은 region 변수 사용
+                .withRegion(region)
                 .build();
     }
 }
