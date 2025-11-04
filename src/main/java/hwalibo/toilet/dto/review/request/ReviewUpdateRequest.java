@@ -22,7 +22,7 @@ public class ReviewUpdateRequest {
 
     private List<Tag> tag;  // 리뷰 태그 enum 리스트 (선택값)
 
-    @NotNull(message = "장애인 여부는 필수 입력값입니다.")
+    @NotNull(message = "장애인 여부는 필수값입니다.")
     private Boolean isDis;  // 장애인 여부
 
     public Review toEntity(Long reviewId) {
