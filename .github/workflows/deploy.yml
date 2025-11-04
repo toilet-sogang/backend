@@ -103,7 +103,7 @@ jobs:
                   redis:
                     condition: service_healthy
                 environment:
-                  - SPRING_PROFILES_ACTIVE=prodg
+                  - SPRING_PROFILES_ACTIVE=prod
                   - SPRING_DATASOURCE_URL=\${DB_URL}
                   - SPRING_DATASOURCE_USERNAME=\${DB_USERNAME}
                   - SPRING_DATASOURCE_PASSWORD=\${DB_PASSWORD}
