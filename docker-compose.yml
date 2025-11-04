@@ -14,7 +14,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       # === DB / Redis (내부 네트워크 호스트네임 사용) ===
-      - SPRING_DATASOURCE_URL=${DB_URL}       # 예: jdbc:mysql://db:3306/toiletsystem?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/toiletsystem?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8          # 예: jdbc:mysql://db:3306/toiletsystem?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_DATA_REDIS_HOST=${REDIS_HOST}      # 예: redis
