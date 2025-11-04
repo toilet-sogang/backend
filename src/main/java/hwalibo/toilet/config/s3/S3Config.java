@@ -19,7 +19,6 @@ public class S3Config {
     @Value("${cloud.aws.credentials.secret-key}")
     private String secretKey;
 
-    // ⬇️⬇️⬇️ 이 코드가 맞습니다! ⬇️⬇️⬇️
     @Value("${cloud.aws.region.static}")
     private String region;
 
