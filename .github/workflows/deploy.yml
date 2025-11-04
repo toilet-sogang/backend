@@ -118,7 +118,7 @@ jobs:
                   - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
                   - AWS_S3_BUCKET=\${AWS_S3_BUCKET}
                 restart: unless-stopped
-
+            
               db:
                 image: mysql:8.0.43
                 container_name: hwalibo-db
