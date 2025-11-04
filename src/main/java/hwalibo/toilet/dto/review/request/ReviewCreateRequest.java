@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class ReviewCreateRequest {
 
     @NotBlank(message = "리뷰 내용은 필수 입력값입니다.")
+    @Size(max = 200, message = "리뷰 내용은 최대 200자까지 입력 가능합니다.")
     private String description;
 
     @NotNull(message = "별점은 필수 입력값입니다.")

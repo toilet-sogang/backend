@@ -28,7 +28,8 @@ public class PhotoReviewListResponse {
                 .map(image -> new PhotoReview(
                         image.getUrl(),
                         image.getReview().getId(),
-                        image.getReview().getToilet().getId()
+                        image.getReview().getToilet().getId(),
+                        image.getId()
                 ))
                 .collect(Collectors.toList());
         return new PhotoReviewListResponse(photoDtos, reviewSlice.hasNext());

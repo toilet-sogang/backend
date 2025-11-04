@@ -15,4 +15,5 @@ public class PhotoUrlResponse {
 
     // JSON의 키인 "photoUrl"과 일치하도록 필드명을 정합니다.
     private String photoUrl;
+    private Long photoId;
 }

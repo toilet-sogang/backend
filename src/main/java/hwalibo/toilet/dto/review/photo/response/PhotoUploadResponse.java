@@ -1,5 +1,6 @@
 package hwalibo.toilet.dto.review.photo.response;
 
+import hwalibo.toilet.domain.review.ReviewImage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,11 +19,15 @@ public class PhotoUploadResponse {
     // [!] 필드명을 명세서의 키인 "createdPhotos"에 맞춥니다.
     private List<PhotoUrlResponse> createdPhotos;
 
+
     // Service Layer의 List<String> URL들을 Response DTO로 변환하는 팩토리 메서드
-    public static PhotoUploadResponse of(List<String> urls) {
-        List<PhotoUrlResponse> photoResponses = urls.stream()
+    public static PhotoUploadResponse of(List<ReviewImage> savedImage) {
+        List<PhotoUrlResponse> photoResponses = savedImage.stream()
                 // String URL -> PhotoUrlResponse 객체로 변환
-                .map(url -> PhotoUrlResponse.builder().photoUrl(url).build())
+                .map(image -> PhotoUrlResponse.builder()
+                        .photoId(image.getId()) // photoId 필드 추가
+                        .photoUrl(image.getUrl())
+                        .build())
                 .collect(Collectors.toList());
 
         return PhotoUploadResponse.builder()

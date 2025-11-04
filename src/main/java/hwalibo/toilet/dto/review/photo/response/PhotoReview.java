@@ -14,5 +14,6 @@ public class PhotoReview {
     private String photoUrl;
     private Long reviewId;
     private Long toiletId;
+    private Long photoId;
 
 }

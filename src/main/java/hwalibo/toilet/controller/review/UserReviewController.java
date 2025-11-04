@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/user/review")
+@Validated
 @RequiredArgsConstructor
 @Tag(name = "User Review")
 public class UserReviewController {
@@ -64,18 +66,18 @@ public class UserReviewController {
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰가 성공적으로 삭제되었습니다."));
     }
 
-    @PatchMapping(value="/{reviewId}/images",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value="/{reviewId}/photos",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary="리뷰 이미지 수정", description="내가 리뷰 속 이미지 수정하기",security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<ReviewPhotoUpdateResponse>> updateImage(@AuthenticationPrincipal User loginUser,
                                                                               @PathVariable Long reviewId,
-                                                                              @Schema(description = "삭제할 ID 정보 (JSON)")
-                                                                                  @RequestPart(value = "request", required = false) String requestJson,
-                                                                              @Valid @Size(min=0,max=2)@RequestPart(value="images",required = false) List<MultipartFile> images) throws java.io.IOException{
+                                                                              @Schema(description = "삭제할 ID 정보 (String)")
+                                                                                  @RequestPart(value = "request", required = false) String requestString,
+                                                                              @Size(min=0,max=2)@RequestPart(value="photos",required = false) List<MultipartFile> images) throws java.io.IOException{
         //swagger가 json이 아니라 string으로 인식하기에 string으로 받고 json에서 dto로 변환
         ReviewPhotoUpdateRequest request;
-        if(requestJson != null) {
+        if(requestString != null) {
             try {
-                request = objectMapper.readValue(requestJson, ReviewPhotoUpdateRequest.class);
+                request = objectMapper.readValue(requestString, ReviewPhotoUpdateRequest.class);
             } catch (Exception e) {
                 throw new IllegalArgumentException("잘못된 JSON 형식의 요청입니다.");
             }

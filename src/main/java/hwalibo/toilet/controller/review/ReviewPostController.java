@@ -35,7 +35,7 @@ public class ReviewPostController {
     @PostMapping(value="/{toiletId}/reviews")
     public ResponseEntity<ApiResponse<ReviewCreateResponse>> uploadReview(@AuthenticationPrincipal User loginUser,
                                                                           @PathVariable Long toiletId,
-                                                                          @RequestBody ReviewCreateRequest request){
+                                                                          @Valid @RequestBody ReviewCreateRequest request){
         ReviewCreateResponse data=reviewPostService.uploadReview(loginUser,request,toiletId);
         return ResponseEntity.ok(new ApiResponse<ReviewCreateResponse>(true,HttpStatus.CREATED.value(),"리뷰가 성공적으로 등록되었습니다.",data));
     }
@@ -45,10 +45,10 @@ public class ReviewPostController {
             description="리뷰 이미지 작성하기",
             security={ @SecurityRequirement(name = "bearerAuth") }
     )
-    @PostMapping(value="/{reviewId}/images", consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value="/{reviewId}/photos", consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PhotoUploadResponse>> uploadImage(@AuthenticationPrincipal User loginUser,
                                                                         @PathVariable Long reviewId,
-                                                                        @Valid@Size(min=0,max=2) @RequestPart("images")   List<MultipartFile> images){
+                                                                        @Size(min=0,max=2) @RequestPart("photos")   List<MultipartFile> images){
         PhotoUploadResponse data= reviewPostService.uploadImage(loginUser,reviewId,images);
         return ResponseEntity.ok(new ApiResponse<PhotoUploadResponse>(true, HttpStatus.CREATED.value(),  "이미지 업로드 성공",data));
 

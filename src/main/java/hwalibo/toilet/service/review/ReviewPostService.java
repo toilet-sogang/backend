@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -59,16 +60,20 @@ public class ReviewPostService {
 
         int nextOrder = 0;
 
+        List<ReviewImage> newImages = new ArrayList<>();
+        //ReviewImage로 변환
         for (String url : uploadedUrls) {
-            ReviewImage newImage = ReviewImage.builder()
+            newImages.add(ReviewImage.builder()
                     .url(url)
                     .sortOrder(nextOrder++)
                     .review(review)
-                    .build();
-            reviewImageRepository.save(newImage);
+                    .build());
         }
 
-        return PhotoUploadResponse.of(uploadedUrls);
+        //db에 이미지 저장
+        List<ReviewImage> savedImages = reviewImageRepository.saveAll(newImages);
+
+        return PhotoUploadResponse.of(savedImages);
     }
     }
 

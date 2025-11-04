@@ -3,6 +3,7 @@ package hwalibo.toilet.controller.review;
 import hwalibo.toilet.domain.type.SortType;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
+import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.service.review.ReviewGetService;
@@ -63,6 +64,15 @@ public class ReviewGetController {
                                                                                    @RequestParam(defaultValue = "24") int size) {
         PhotoReviewListResponse data = reviewGetService.getPhotoReviewList(loginUser,toiletId,lastPhotoId,size);
         return ResponseEntity.ok(new ApiResponse<PhotoReviewListResponse>(true, HttpStatus.OK.value(),"포토 리뷰 목록을 성공적으로 조회했습니다.",data ));
+    }
+
+    @GetMapping("/{toiletId}/photos/{photoId}")
+    @Operation(summary="포토 리뷰 상세보기",security = { @SecurityRequirement(name = "bearerAuth") })
+    public ResponseEntity<ApiResponse<PhotoReviewDetailResponse>> getPhotoReviewDetail(@AuthenticationPrincipal User loginUser,
+                                                                                       @PathVariable Long toiletId,
+                                                                                       @PathVariable Long photoId){
+        PhotoReviewDetailResponse data=reviewGetService.getPhotoReviewDetail(loginUser,toiletId,photoId);
+        return ResponseEntity.ok(new ApiResponse<PhotoReviewDetailResponse>(true,HttpStatus.OK.value(),"포토 리뷰 상세 정보를 성공적으로 조회했습니다.",data));
     }
 }
 

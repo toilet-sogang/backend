@@ -4,6 +4,7 @@ import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.type.SortType;
 import hwalibo.toilet.domain.user.User;
+import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewResponse;
@@ -62,6 +63,7 @@ public class ReviewGetService {
         return new ReviewListResponse(responseList);
     }
 
+    @Transactional(readOnly = true)
     public PhotoReviewListResponse getPhotoReviewList(User loginUser, Long toiletId, Long lastPhotoId, int size) {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
@@ -79,5 +81,23 @@ public class ReviewGetService {
         }
         return PhotoReviewListResponse.fromReviews(imageSlice);
 
+    }
+
+    @Transactional(readOnly = true)
+    public PhotoReviewDetailResponse getPhotoReviewDetail(User loginUser, Long toiletId, Long photoId){
+        if (loginUser == null) {
+            throw new SecurityException("유효하지 않은 토큰입니다.");
+        }
+
+        ReviewImage reviewImage=reviewImageRepository.findByIdWithReviewAndDetails(photoId)
+                .orElseThrow(() -> new EntityNotFoundException("사진을 찾을 수 없음"));
+
+        Long actualToiletId = reviewImage.getReview().getToilet().getId();
+        if (!actualToiletId.equals(toiletId)) {
+            // 사진(105번)은 존재하지만, 요청한 화장실(12번)의 사진이 아님
+            throw new IllegalArgumentException("요청한 화장실에 속한 사진이 아닙니다.");
+        }
+
+        return PhotoReviewDetailResponse.of(reviewImage.getUrl(),reviewImage.getReview());
     }
 }
