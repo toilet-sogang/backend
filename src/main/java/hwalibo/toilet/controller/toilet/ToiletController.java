@@ -28,9 +28,9 @@ public class ToiletController {
             description = "특정 화장실의 상세 정보 조회",
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/{toiletId}")
     public ResponseEntity<ApiResponse<ToiletDetailResponse>> toiletDetail(
-            @AuthenticationPrincipal User loginUser,@PathVariable("id") Long toiletId)
+            @AuthenticationPrincipal User loginUser,@PathVariable("toiletId") Long toiletId)
 
             {
 
