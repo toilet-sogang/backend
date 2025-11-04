@@ -1,3 +1,4 @@
+/*
 package hwalibo.toilet.init;
 
 import hwalibo.toilet.domain.review.Review;
@@ -109,4 +110,4 @@ public class DummySeedReviewer {
                 .isDis(isDis)
                 .build();
     }
-}
+}*/
