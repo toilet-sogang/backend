@@ -22,12 +22,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      */
     Page<Review> findAllByToilet(Toilet toilet, Pageable pageable);
 
-    /**
-     * 특정 사용자가 작성한 모든 리뷰를 조회합니다. (e.g., '내가 쓴 리뷰' 기능)
-     * @param user 조회할 사용자 엔티티
-     * @return List<Review>
-     */
-    List<Review> findAllByUser(User user);
+    @Query("SELECT DISTINCT r FROM Review r " +
+            "LEFT JOIN FETCH r.reviewImages ri " +
+            "WHERE r.user = :user ")
+    List<Review> findAllByUser(@Param("user") User user);
 
     /**
      * 특정 사용자가 특정 화장실에 리뷰를 이미 작성했는지 확인할 때 사용합니다.
