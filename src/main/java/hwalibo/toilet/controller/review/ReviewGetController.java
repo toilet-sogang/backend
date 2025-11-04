@@ -3,6 +3,7 @@ package hwalibo.toilet.controller.review;
 import hwalibo.toilet.domain.type.SortType;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
+import hwalibo.toilet.dto.review.photo.response.PhotoReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.service.review.ReviewGetService;
 import hwalibo.toilet.service.review.ReviewLikeService;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +53,16 @@ public class ReviewGetController {
                                                                          @RequestParam(value = "sort", defaultValue = "LATEST") SortType sortType){
         ReviewListResponse data= reviewGetService.getReviewList(loginUser,toiletId,sortType);
         return ResponseEntity.ok(new ApiResponse<ReviewListResponse>(true,200,"리뷰 목록 조회 성공",data));
+    }
+
+    @GetMapping("/{toiletId}/photos")
+    @Operation(summary="특정 화장실 포토 리뷰 목록 조회",security = { @SecurityRequirement(name = "bearerAuth") })
+    public ResponseEntity<ApiResponse<PhotoReviewListResponse>> getPhotoReviewList(@AuthenticationPrincipal User loginUser,
+                                                                                   @PathVariable Long toiletId,
+                                                                                   @RequestParam(required = false)Long lastPhotoId,
+                                                                                   @RequestParam(defaultValue = "24") int size) {
+        PhotoReviewListResponse data = reviewGetService.getPhotoReviewList(loginUser,toiletId,lastPhotoId,size);
+        return ResponseEntity.ok(new ApiResponse<PhotoReviewListResponse>(true, HttpStatus.OK.value(),"포토 리뷰 목록을 성공적으로 조회했습니다.",data ));
     }
 }
 
