@@ -71,24 +71,21 @@ jobs:
             docker pull ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
             
             # 4. Create .env file from GitHub Secrets
-            cat <<EOF > .env
-            SPRING_PROFILES_ACTIVE=prod
-            DB_URL=${{ secrets.DB_URL }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_ACCESS_VALIDITY=${{ secrets.JWT_ACCESS_VALIDITY }}
-            JWT_REFRESH_VALIDITY=${{ secrets.JWT_REFRESH_VALIDITY }}
-            NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
-            NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-            AWS_REGION=${{ secrets.AWS_REGION }}
-            EOF
+            echo "SPRING_PROFILES_ACTIVE=prod" > .env
+            echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "JWT_ACCESS_VALIDITY=${{ secrets.JWT_ACCESS_VALIDITY }}" >> .env
+            echo "JWT_REFRESH_VALIDITY=${{ secrets.JWT_REFRESH_VALIDITY }}" >> .env
+            echo "NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}" >> .env
+            echo "NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}" >> .env
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+            echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
             
             # 5. Create docker-compose.yml file (Ensure correct content and use environment variables)
             cat <<EOF > docker-compose.yml
@@ -107,7 +104,7 @@ jobs:
                     condition: service_healthy
                 environment:
                   - SPRING_PROFILES_ACTIVE=prod
-                  - SPRING_DATASOURCE_URL=\${DB_URL}
+                  - SPRING_DATASOURCE_URL=${{ secrets.DB_URL }}
                   - SPRING_DATASOURCE_USERNAME=\${DB_USERNAME}
                   - SPRING_DATASOURCE_PASSWORD=\${DB_PASSWORD}
                   - SPRING_DATA_REDIS_HOST=\${REDIS_HOST}
