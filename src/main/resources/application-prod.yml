@@ -78,6 +78,7 @@ cloud:
     stack:
       auto: false
 # CORS 설정
+
 cors:
   allowed-origins:
     - "https://hwalibo-backend.duckdns.org"
