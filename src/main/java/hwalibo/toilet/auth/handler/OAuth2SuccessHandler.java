@@ -54,6 +54,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
+
         //개발용: 주석 풀기
         /*String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
                 .queryParam("accessToken", accessToken)

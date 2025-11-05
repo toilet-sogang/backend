@@ -83,6 +83,7 @@ cors:
   allowed-origins:
     - "https://hwalibo-backend.duckdns.org"
     - "https://frontendproj-git-main-choiys-projects.vercel.app"
+    - "http://localhost:5173"
 
 logging:
   level:

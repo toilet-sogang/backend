@@ -12,7 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:5173", // 로컬 프론트엔드 (Vite)
-                        "https://frontendproj-git-main-choiys-projects.vercel.app" // Vercel 배포 주소
+                        "https://frontendproj-git-main-choiys-projects.vercel.app", // Vercel 배포 주소
+                        "https://hwalibo-backend.duckdns.org"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*") // 모든 헤더 허용
