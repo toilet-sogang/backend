@@ -6,6 +6,11 @@ spring:
   application:
     name: demo
 
+  servlet:
+    multipart:
+      max-file-size: 100MB     # 개별 파일 최대 100MB
+      max-request-size: 100MB  # 전체 요청 최대 100MB
+
   data:
     redis:
       host: ${REDIS_HOST}
