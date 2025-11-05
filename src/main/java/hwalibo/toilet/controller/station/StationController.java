@@ -36,7 +36,7 @@ public class StationController {
     }
 
     @PostMapping("/suggest")
-    @Operation(summary = "역 이름 자동완성")
+    @Operation(summary = "역 이름 자동완성", security = { @SecurityRequirement(name = "bearerAuth") }) // ⬅️ 여기 추가했습니다!
     public ResponseEntity<ApiResponse<StationSuggestResponse>> suggest(@RequestBody StationSuggestRequest request) {
         if (request == null) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, 400, "latitude와 longtitude 값이 필요합니다.", null));
