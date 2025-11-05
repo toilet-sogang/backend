@@ -13,19 +13,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class S3Config {
 
-    // application.yml의 값을 Java 변수로 주입받습니다.
-    @Value("${spring.cloud.aws.credentials.access-key}")
+    @Value("${cloud.aws.credentials.access-key}")
     private String accessKey;
 
-    @Value("${spring.cloud.aws.credentials.secret-key}")
+    @Value("${cloud.aws.credentials.secret-key}")
     private String secretKey;
 
-    @Value("${spring.cloud.aws.region.static}")
+    @Value("${cloud.aws.region.static}")
     private String region;
 
     @Bean
     public AmazonS3 amazonS3Client() {
-        // yml에서 읽어온 accessKey와 secretKey 변수를 사용합니다.
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
 
         return AmazonS3ClientBuilder.standard()

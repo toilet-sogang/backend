@@ -81,3 +81,6 @@ cors:
 logging:
   level:
     org.springframework.security: INFO
+
+server:
+  forward-headers-strategy: framework

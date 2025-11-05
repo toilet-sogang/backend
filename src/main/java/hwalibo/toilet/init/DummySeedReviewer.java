@@ -1,3 +1,4 @@
+/*
 package hwalibo.toilet.init;
 
 import hwalibo.toilet.domain.review.Review;
@@ -11,13 +12,14 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+@Profile({"local"})
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -108,4 +110,4 @@ public class DummySeedReviewer {
                 .isDis(isDis)
                 .build();
     }
-}
+}*/

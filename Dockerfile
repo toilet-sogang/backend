@@ -1,5 +1,5 @@
-# 베이스 이미지를 OpenJDK 21 버전으로 설정
-FROM openjdk:21-jdk
+# 베이스 이미지를 jdk 21 버전으로 설정
+FROM eclipse-temurin:21-jdk
 
 # JAR 파일이 생성될 경로를 변수로 지정
 ARG JAR_FILE=build/libs/*.jar
