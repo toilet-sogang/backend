@@ -7,18 +7,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 25MB
 
-  cloud:
-    aws:
-      credentials:
-        access-key: ${AWS_ACCESS_KEY_ID}
-        secret-key: ${AWS_SECRET_KEY_ID}
-      s3:
-        bucket: ${AWS_S3_BUCKET}
-      region:
-          static: ap-northeast-2
-      stack:
-        auto: false
-
   data:
     redis:
       host: ${REDIS_HOST}
@@ -81,3 +69,15 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false

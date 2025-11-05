@@ -21,9 +21,10 @@ public class PhotoReviewListResponse {
 
     private List<PhotoReview> content;
     private boolean hasNext;
+    private String nextCursor;
 
     // 서비스 로직에서 페이징 처리된 Review 목록(Slice<Review>)을 받아 DTO를 생성합니다.
-    public static PhotoReviewListResponse fromReviews(Slice<ReviewImage> reviewSlice) {
+    public static PhotoReviewListResponse fromReviews(Slice<ReviewImage> reviewSlice,String newCursor) {
         List<PhotoReview> photoDtos = reviewSlice.getContent().stream()
                 .map(image -> new PhotoReview(
                         image.getUrl(),
@@ -32,6 +33,6 @@ public class PhotoReviewListResponse {
                         image.getId()
                 ))
                 .collect(Collectors.toList());
-        return new PhotoReviewListResponse(photoDtos, reviewSlice.hasNext());
+        return new PhotoReviewListResponse(photoDtos, reviewSlice.hasNext(),newCursor);
     }
 }
