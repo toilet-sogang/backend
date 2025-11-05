@@ -11,10 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:8080", "http://127.0.0.1:8080",
-                        "http://localhost:3000", "http://127.0.0.1:3000", // 로컬 프론트엔드 주소
-                        "https://frontend.com", //배포될 프론트엔드 주소
-                        "https://hwalibo-backend.duckdns.org"
+                        "http://localhost:5173", // 로컬 프론트엔드 (Vite)
+                        "https://frontendproj-git-main-choiys-projects.vercel.app" // Vercel 배포 주소
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*") // 모든 헤더 허용

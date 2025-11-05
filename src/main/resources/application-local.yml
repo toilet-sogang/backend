@@ -81,3 +81,7 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+app:
+  oauth2:
+    redirect-uri: http://localhost:5173/auth/callback

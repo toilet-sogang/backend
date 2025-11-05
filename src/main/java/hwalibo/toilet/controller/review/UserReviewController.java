@@ -54,7 +54,7 @@ public class UserReviewController {
     @Operation(summary = "리뷰 수정", security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<ReviewUpdateResponse>> update(@AuthenticationPrincipal User loginUser,
                                                                     @PathVariable Long reviewId,
-                                                                    @RequestBody ReviewUpdateRequest request) {
+                                                                    @Valid @RequestBody ReviewUpdateRequest request) {
         Long id = reviewCommandService.updateMyReview(loginUser, reviewId, request);
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰가 성공적으로 수정되었습니다.", ReviewUpdateResponse.of(id)));
     }
@@ -93,5 +93,4 @@ public class UserReviewController {
         ReviewPhotoUpdateResponse data=userService.updateImage(loginUser,reviewId,request,images);
         return ResponseEntity.ok(new ApiResponse<ReviewPhotoUpdateResponse>(true,200,"이미지가 성공적으로 수정되었습니다.",data));
     }
-
 }

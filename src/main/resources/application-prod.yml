@@ -77,12 +77,12 @@ cloud:
       static: ap-northeast-2
     stack:
       auto: false
-# CORS 설정
 
+# CORS 설정
 cors:
   allowed-origins:
     - "https://hwalibo-backend.duckdns.org"
-    - "https://frontend.com"
+    - "https://frontendproj-git-main-choiys-projects.vercel.app"
 
 logging:
   level:
@@ -90,3 +90,6 @@ logging:
 
 server:
   forward-headers-strategy: framework
+app:
+  oauth2:
+    redirect-uri: https://frontendproj-git-main-choiys-projects.vercel.app/auth/callback
