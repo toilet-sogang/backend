@@ -3,6 +3,7 @@ package hwalibo.toilet.service.review;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.dto.review.photo.response.ImageDto;
 import hwalibo.toilet.dto.review.response.MyReviewListResponse;
 import hwalibo.toilet.dto.review.response.MyReviewResponse;
 import hwalibo.toilet.respository.review.ReviewRepository;
@@ -39,7 +40,7 @@ public class ReviewQueryService {
                         r.getDescription(),
                         r.getStar() == null ? null : r.getStar().intValue(),
                         r.getReviewImages().stream()
-                                .map(ReviewImage::getUrl) // 각 ReviewImage 객체에서 getUrl() 메서드를 호출
+                                .map(img->new ImageDto(img.getId(),img.getUrl())) // 각 ReviewImage의 id와 url을 받는 image dto 생성
                                 .collect(Collectors.toList()),// 반환된 String(URL)들을 새 리스트로 수집,
                         r.getTag(),
                         r.getCreatedAt(),
