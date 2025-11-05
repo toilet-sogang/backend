@@ -34,7 +34,14 @@ public class ReviewGetController {
             @PathVariable Long reviewId) {
 
         reviewLikeService.like(loginUser, toiletId, reviewId);
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰 좋아요 성공", null));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        true,
+                        HttpStatus.CREATED.value(),
+                        "리뷰 좋아요 성공",
+                        null
+                ));
     }
 
     @DeleteMapping("/{toiletId}/reviews/{reviewId}/like")
@@ -43,9 +50,18 @@ public class ReviewGetController {
             @AuthenticationPrincipal User loginUser,
             @PathVariable Long toiletId,
             @PathVariable Long reviewId) {
+
         reviewLikeService.unlike(loginUser, toiletId, reviewId);
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰 좋아요 취소 성공", null));
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(new ApiResponse<>(
+                        true,
+                        HttpStatus.NO_CONTENT.value(),
+                        "리뷰 좋아요 취소 성공",
+                        null
+                ));
     }
+
 
     @GetMapping("/{toiletId}/reviews")
     @Operation(summary="특정 화장실 리뷰 목록 조회",security = { @SecurityRequirement(name = "bearerAuth") })
