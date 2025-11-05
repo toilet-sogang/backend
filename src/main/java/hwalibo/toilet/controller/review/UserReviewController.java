@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -53,17 +54,23 @@ public class UserReviewController {
     @Operation(summary = "리뷰 수정", security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<ReviewUpdateResponse>> update(@AuthenticationPrincipal User loginUser,
                                                                     @PathVariable Long reviewId,
-                                                                    @RequestBody ReviewUpdateRequest request) {
+                                                                    @Valid @RequestBody ReviewUpdateRequest request) {
         Long id = reviewCommandService.updateMyReview(loginUser, reviewId, request);
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰가 성공적으로 수정되었습니다.", ReviewUpdateResponse.of(id)));
     }
 
     @DeleteMapping("/{reviewId}")
     @Operation(summary = "리뷰 삭제", description = "내가 작성한 리뷰 삭제", security = { @SecurityRequirement(name = "bearerAuth") })
-    public ResponseEntity<ApiResponse<Void>> delete(@AuthenticationPrincipal User loginUser,
-                                                    @PathVariable Long reviewId) {
+    public ResponseEntity<ApiResponse<Void>> delete(@AuthenticationPrincipal User loginUser, @PathVariable Long reviewId) {
         reviewCommandService.deleteMyReview(loginUser, reviewId);
-        return ResponseEntity.ok(new ApiResponse<>(true, 200, "리뷰가 성공적으로 삭제되었습니다."));
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(new ApiResponse<>(
+                        true,
+                        HttpStatus.NO_CONTENT.value(),
+                        "리뷰가 성공적으로 삭제되었습니다.",
+                        null
+                ));
     }
 
     @PatchMapping(value="/{reviewId}/photos",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -86,5 +93,4 @@ public class UserReviewController {
         ReviewPhotoUpdateResponse data=userService.updateImage(loginUser,reviewId,request,images);
         return ResponseEntity.ok(new ApiResponse<ReviewPhotoUpdateResponse>(true,200,"이미지가 성공적으로 수정되었습니다.",data));
     }
-
 }

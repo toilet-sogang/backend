@@ -86,11 +86,13 @@ public class AuthController {
             accessToken = authHeader.substring(JwtConstants.TOKEN_PREFIX.length());
         }
 
-        // ✅ 로그아웃 처리 (DB RefreshToken 삭제 + Redis 블랙리스트 등록)
+        // ✅ 로그아웃 처리
         authService.logout(loginUser, accessToken);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(true, HttpStatus.OK.value(), "성공적으로 로그아웃되었습니다.")
-        );
+        // ✅ 204 No Content 반환
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(new ApiResponse<>(true, HttpStatus.NO_CONTENT.value(), "성공적으로 로그아웃되었습니다.", null));
     }
+
 }

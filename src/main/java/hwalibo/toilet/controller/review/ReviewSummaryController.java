@@ -49,7 +49,7 @@ public class ReviewSummaryController {
         ReviewSummaryResponse data = reviewSummaryService.summarizeByToiletId(toiletId);
         ApiResponse<ReviewSummaryResponse> response = new ApiResponse<>(
                 true,
-                HttpStatus.OK.value(), // 200
+                HttpStatus.OK.value(),
                 "리뷰 요약 성공",
                 data
         );
