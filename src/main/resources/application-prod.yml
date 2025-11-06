@@ -93,4 +93,5 @@ server:
   forward-headers-strategy: framework
 app:
   oauth2:
-    redirect-uri: https://frontendproj-git-main-choiys-projects.vercel.app/auth/callback
+    redirect-uri: http://localhost:5173/auth/callback
+    #https://frontendproj-git-main-choiys-projects.vercel.app/auth/callback
