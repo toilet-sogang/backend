@@ -10,6 +10,7 @@ import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
+import hwalibo.toilet.utils.CursorUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -64,7 +65,7 @@ public class ReviewGetService {
     }
 
     @Transactional(readOnly = true)
-    public PhotoReviewListResponse getPhotoReviewList(User loginUser, Long toiletId, Long lastPhotoId, int size) {
+    public PhotoReviewListResponse getPhotoReviewList(User loginUser, Long toiletId, String nextCursor, int size) {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
@@ -72,15 +73,33 @@ public class ReviewGetService {
         Pageable pageable = PageRequest.of(0, size);
 
         Slice<ReviewImage> imageSlice;
-        if (lastPhotoId == null) {
+        if (nextCursor == null || nextCursor.isBlank()) {
             //첫 사진 조회
-            imageSlice = reviewImageRepository.findByToiletIdOrderByIdDesc(toiletId, pageable);
+            imageSlice = reviewImageRepository.findFirstPageByToiletId(toiletId, pageable);
         } else {
-            //이후 사진 조회
-            imageSlice = reviewImageRepository.findByToiletIdAndIdLessThanOrderByIdDesc(toiletId, lastPhotoId, pageable);
+            try {
+                var c = CursorUtils.decode(nextCursor);
+                // 이후 사진 조회
+                imageSlice = reviewImageRepository.findNextPageByToiletId(toiletId, c.createdAt(), c.id(), pageable);
+            } catch (Exception e) {
+                // 예: Base64 디코딩 실패 또는 형식 오류
+                throw new IllegalArgumentException("잘못된 커서 형식입니다.");
+            }
         }
-        return PhotoReviewListResponse.fromReviews(imageSlice);
 
+
+        String newCursor = null;
+
+        if (imageSlice.hasNext()) {
+            // getContent()로 실제 List를 가져옵니다.
+            List<ReviewImage> content = imageSlice.getContent();
+
+            ReviewImage lastElement = content.get(content.size() - 1); // 마지막 review Image 가져오기
+
+            newCursor = CursorUtils.encode(lastElement.getReview().getCreatedAt(), lastElement.getId());
+        }
+
+        return PhotoReviewListResponse.fromReviews(imageSlice, newCursor);
     }
 
     @Transactional(readOnly = true)

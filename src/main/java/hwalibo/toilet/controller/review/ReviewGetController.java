@@ -76,9 +76,9 @@ public class ReviewGetController {
     @Operation(summary="특정 화장실 포토 리뷰 목록 조회",security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<PhotoReviewListResponse>> getPhotoReviewList(@AuthenticationPrincipal User loginUser,
                                                                                    @PathVariable Long toiletId,
-                                                                                   @RequestParam(required = false)Long lastPhotoId,
+                                                                                   @RequestParam(required = false)String nextCursor,
                                                                                    @RequestParam(defaultValue = "24") int size) {
-        PhotoReviewListResponse data = reviewGetService.getPhotoReviewList(loginUser,toiletId,lastPhotoId,size);
+        PhotoReviewListResponse data = reviewGetService.getPhotoReviewList(loginUser,toiletId,nextCursor,size);
         return ResponseEntity.ok(new ApiResponse<PhotoReviewListResponse>(true, HttpStatus.OK.value(),"포토 리뷰 목록을 성공적으로 조회했습니다.",data ));
     }
 

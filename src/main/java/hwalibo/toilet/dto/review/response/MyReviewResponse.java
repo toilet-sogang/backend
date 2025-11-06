@@ -3,6 +3,7 @@ package hwalibo.toilet.dto.review.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.Tag;
+import hwalibo.toilet.dto.review.photo.response.ImageDto;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ public class MyReviewResponse {
     private final Integer numGate;    // 화장실 출구 번호
     private final String description;        // 리뷰 상세 내용
     private final Integer star;       // 별점
-    private final List<String> photo; // 사진 URL 리스트
+    private final List<ImageDto> photo; // 사진 URL 리스트
     private final List<String> tag;   // 태그 코드값 리스트 ("TOILET_CLEAN" 등)
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -32,7 +33,7 @@ public class MyReviewResponse {
      * JPQL의 필드 순서와 타입이 이 생성자의 파라미터와 정확히 일치해야 합니다.
      */
     public MyReviewResponse(Long id, String name, Gender gender, Integer numGate,
-                            String description, Integer star, List<String> photo, List<Tag> tag,
+                            String description, Integer star, List<ImageDto> photo, List<Tag> tag,
                             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
