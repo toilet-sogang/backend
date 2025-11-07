@@ -9,6 +9,7 @@ import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
+import hwalibo.toilet.exception.user.IdenticalNicknameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
@@ -40,8 +41,10 @@ public class UserService {
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
+
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
+
         return buildUserResponseWithRate(user);
     }
 
@@ -50,13 +53,26 @@ public class UserService {
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
+
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
+
         String newName = request.getName();
+        String currentName = user.getName();
+
+        // 1. 현재 닉네임과 동일한지 *먼저* 검사
+        if (newName.equals(currentName)) {
+            throw new IdenticalNicknameException("현재 닉네임과 동일한 닉네임입니다.");
+        }
+
+        // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
         if (userRepository.existsByName(newName)) {
             throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
         }
+
+        // 3. 모든 검사를 통과하면 이름 업데이트
         user.updateName(newName);
+
         return buildUserResponseWithRate(user);
     }
 
