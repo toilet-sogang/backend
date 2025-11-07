@@ -12,7 +12,7 @@ import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
 import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
-import hwalibo.toilet.exception.user.IdenticalNicknameException;
+import hwalibo.toilet.exception.user.IdenticalNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,8 +57,8 @@ public class GlobalExceptionHandler {
     }
 
     //IdenticalNicknameException
-    @ExceptionHandler(IdenticalNicknameException.class)
-    protected ResponseEntity<ApiResponse<?>> handleIdenticalNicknameException(IdenticalNicknameException e) {
+    @ExceptionHandler(IdenticalNameException.class)
+    protected ResponseEntity<ApiResponse<?>> handleIdenticalNicknameException(IdenticalNameException e) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 

@@ -9,7 +9,7 @@ import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
-import hwalibo.toilet.exception.user.IdenticalNicknameException;
+import hwalibo.toilet.exception.user.IdenticalNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
@@ -62,7 +62,7 @@ public class UserService {
 
         // 1. 현재 닉네임과 동일한지 *먼저* 검사
         if (newName.equals(currentName)) {
-            throw new IdenticalNicknameException("현재 닉네임과 동일한 닉네임입니다.");
+            throw new IdenticalNameException("현재 닉네임과 동일한 닉네임입니다.");
         }
 
         // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
