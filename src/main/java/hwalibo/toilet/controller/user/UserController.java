@@ -4,7 +4,6 @@ import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
-import hwalibo.toilet.dto.user.response.UserUpdateResponse;
 import hwalibo.toilet.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,14 +36,12 @@ public class UserController {
     @Operation(
             summary = "유저 이름 수정",
             description = "로그인한 사용자의 이름을 수정합니다.",
-            security = { @SecurityRequirement(name = "bearerAuth") } // ✅ JWT 필요 → 🔒 표시됨
+            security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @PatchMapping("/name")
-    public ResponseEntity<ApiResponse<UserUpdateResponse>> updateUserName(
-            @AuthenticationPrincipal User loginUser,
-            @Valid @RequestBody UserNameUpdateRequest request
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserName(@AuthenticationPrincipal User loginUser, @Valid @RequestBody UserNameUpdateRequest request
     ) {
-        UserUpdateResponse response = userService.updateUserName(loginUser, request);
+        UserResponse response = userService.updateUserName(loginUser, request);
         return ResponseEntity.ok(new ApiResponse<>(true, 200, "사용자 이름이 성공적으로 수정되었습니다.", response));
     }
 }

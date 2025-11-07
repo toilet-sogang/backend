@@ -7,7 +7,6 @@ import hwalibo.toilet.dto.review.photo.request.ReviewPhotoUpdateRequest;
 import hwalibo.toilet.dto.review.photo.response.ReviewPhotoUpdateResponse;
 import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
-import hwalibo.toilet.dto.user.response.UserUpdateResponse;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
@@ -37,50 +36,28 @@ public class UserService {
     private final ReviewImageRepository reviewImageRepository;
 
     // 로그인된 유저 정보 조회
-    @Transactional(readOnly = true)
     public UserResponse getUserInfo(User loginUser) {
-
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
-
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
-
-        // 전체 유저 수
-        long totalUsers = userRepository.count();
-
-        // 나보다 리뷰 수가 많은 유저 수
-        long higherRank = userRepository.countByNumReviewGreaterThan(
-                user.getNumReview() != null ? user.getNumReview() : 0
-        );
-
-        // 상위 퍼센트 (정수)
-        int rate = totalUsers > 0
-                ? (int) Math.ceil(higherRank * 100.0 / totalUsers)
-                : 100;
-
-        return UserResponse.from(user, rate);
+        return buildUserResponseWithRate(user);
     }
 
     @Transactional
-    public UserUpdateResponse updateUserName(User loginUser,UserNameUpdateRequest request) {
-
+    public UserResponse updateUserName(User loginUser, UserNameUpdateRequest request) {
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
-
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
-
         String newName = request.getName();
-
         if (userRepository.existsByName(newName)) {
             throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
         }
-
         user.updateName(newName);
-        return UserUpdateResponse.from(user);
+        return buildUserResponseWithRate(user);
     }
 
     @Transactional
@@ -155,7 +132,24 @@ public class UserService {
         List<String> finalUrls=review.getReviewImages().stream()
                 .map(ReviewImage::getUrl).collect(Collectors.toList());
 
-    return ReviewPhotoUpdateResponse.of(finalUrls);
-}
+        return ReviewPhotoUpdateResponse.of(finalUrls);
+    }
 
+    private UserResponse buildUserResponseWithRate(User user) {
+        // 전체 유저 수
+        long totalUsers = userRepository.count();
+
+        // 나보다 리뷰 수가 많은 유저 수
+        long higherRank = userRepository.countByNumReviewGreaterThan(
+                user.getNumReview() != null ? user.getNumReview() : 0
+        );
+
+        // 상위 퍼센트 (정수)
+        int rate = totalUsers > 0
+                ? (int) Math.ceil(higherRank * 100.0 / totalUsers)
+                : 100;
+
+        // (이전에 수정한) id가 포함된 UserResponse.from 호출
+        return UserResponse.from(user, rate);
+    }
 }
