@@ -1,5 +1,6 @@
 package hwalibo.toilet.dto.review.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.type.Tag;
 import jakarta.validation.constraints.*;
@@ -21,8 +22,9 @@ public class ReviewUpdateRequest {
 
     private List<Tag> tag;  // 리뷰 태그 enum 리스트 (선택값)
 
-    @NotNull(message = "장애인 여부는 필수 입력값입니다.")
-    private Boolean isDis;  // 장애인 여부
+    @NotNull(message="장애인 화장실 여부는 필수 선택해야합니다.")
+    @JsonProperty("isDis")
+    private boolean isDis;
 
     public Review toEntity(Long reviewId) {
         return Review.builder()
