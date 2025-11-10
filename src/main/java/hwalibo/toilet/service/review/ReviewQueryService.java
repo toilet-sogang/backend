@@ -36,7 +36,7 @@ public class ReviewQueryService {
                         r.getId(),
                         r.getToilet().getName(),
                         r.getToilet().getGender(),
-                        r.getToilet().getNumGate(),
+                        r.getToilet().getLine(),
                         r.getDescription(),
                         r.getStar() == null ? null : r.getStar().intValue(),
                         r.getReviewImages().stream()
@@ -52,4 +52,3 @@ public class ReviewQueryService {
         return new MyReviewListResponse(items);
     }
 }
-
