@@ -65,11 +65,7 @@ public class ReviewCommandService {
                 f.setAccessible(true);
                 f.set(review, request.getTag());
             }
-            if (request.getIsDis() != null) {
-                java.lang.reflect.Field f = Review.class.getDeclaredField("isDis");
-                f.setAccessible(true);
-                f.set(review, request.getIsDis());
-            }
+            review.updateIsDis(request.isDis());
         } catch (Exception e) {
             throw new IllegalArgumentException("업데이트 실패: " + e.getMessage());
         }
