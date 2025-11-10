@@ -21,7 +21,7 @@ public class MyReviewResponse {
     private final Integer star;       // 별점
     private final List<ImageDto> photo; // 사진 URL 리스트
     private final List<String> tag;   // 태그 코드값 리스트 ("TOILET_CLEAN" 등)
-
+    private final boolean isDis;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private final LocalDateTime createdAt;
 
@@ -33,7 +33,7 @@ public class MyReviewResponse {
      * JPQL의 필드 순서와 타입이 이 생성자의 파라미터와 정확히 일치해야 합니다.
      */
     public MyReviewResponse(Long id, String name, Gender gender, Integer numGate,
-                            String description, Integer star, List<ImageDto> photo, List<Tag> tag,
+                            String description, Integer star, List<ImageDto> photo, List<Tag> tag, boolean isDis,
                             LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
@@ -45,6 +45,7 @@ public class MyReviewResponse {
         this.tag = tag.stream()       // List<ReviewTag> -> List<String> 변환
                 .map(Enum::name)
                 .collect(Collectors.toList());
+        this.isDis = isDis;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }

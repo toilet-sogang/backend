@@ -60,7 +60,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
-*/
+        */
         log.info("Redirecting to: {}", targetUrl);
 
         // 5. 생성된 URL로 사용자를 리다이렉트

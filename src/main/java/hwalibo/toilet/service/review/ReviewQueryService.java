@@ -43,6 +43,7 @@ public class ReviewQueryService {
                                 .map(img->new ImageDto(img.getId(),img.getUrl())) // 각 ReviewImage의 id와 url을 받는 image dto 생성
                                 .collect(Collectors.toList()),// 반환된 String(URL)들을 새 리스트로 수집,
                         r.getTag(),
+                        r.isDis(),
                         r.getCreatedAt(),
                         r.getUpdatedAt()
                 ))

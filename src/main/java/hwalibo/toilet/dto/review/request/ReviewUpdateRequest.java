@@ -16,7 +16,6 @@ public class ReviewUpdateRequest {
     @DecimalMax(value = "5.0", inclusive = true, message = "별점은 5.0 이하이어야 합니다.")
     private Double star;  // 별점
 
-    @NotBlank(message = "리뷰 내용은 비어 있을 수 없습니다.")
     @Size(max = 200, message = "리뷰 내용은 200자 이내로 작성해주세요.")
     private String description;  // 리뷰 상세 설명
 

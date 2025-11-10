@@ -22,8 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -82,70 +81,86 @@ public class UserService {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
-        Review review=reviewRepository.findByIdWithImages(reviewId)
+        // 1. (변경 없음) 리뷰와 이미지를 '함께' 조회합니다.
+        Review review = reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
 
-        //user가 리뷰 작성자 맞는지 검증
-        if(!review.getUser().getId().equals(loginUser.getId())){
+        // 2. (변경 없음) 권한 검증
+        if (!review.getUser().getId().equals(loginUser.getId())) {
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
 
-        //삭제할 이미지가 있는 경우
-        List<Long>deleteId;
-        if(request!=null)deleteId=request.getDeletedImageIds();
-        else deleteId=null;
+        // 3. (로직 대폭 수정) 삭제 로직 변경
+        if (request != null && request.getDeletedImageIds() != null) {
 
-        if(deleteId!=null) {
-            List<ReviewImage> imagesToDelete = reviewImageRepository.findAllById(deleteId);
+            // 3-1. 삭제할 ID 목록을 Set으로 만듭니다. (성능 향상)
+            Set<Long> idsToDelete = new HashSet<>(request.getDeletedImageIds());
 
-            for (ReviewImage image : imagesToDelete) {
-                if (image.getReview().getId().equals(reviewId)) {
-                    //s3 삭제
+            // 3-2. 'review'가 들고 있는 이미지 리스트(getReviewImages)를 직접 순회합니다.
+            // (주의: remove()를 안전하게 쓰려면 Iterator 사용이 필수)
+            Iterator<ReviewImage> iterator = review.getReviewImages().iterator();
+
+            while (iterator.hasNext()) {
+                ReviewImage image = iterator.next();
+
+                // 3-3. 이 이미지가 "삭제할 ID 목록"에 포함되어 있다면
+                if (idsToDelete.contains(image.getId())) {
+
+                    // a. S3에서 먼저 삭제
                     s3UploadService.delete(image.getUrl());
-                    //repository 삭제
-                    reviewImageRepository.delete(image);
-                    review.getReviewImages().remove(image);
-                    log.info("S3및 DB에서 이미지 삭제 완료:{}", image.getUrl());
+
+                    // b. 컬렉션에서 제거 (핵심!)
+                    // orphanRemoval=true이므로,
+                    // JPA가 이 변경을 감지하고 나중에 DB에서 DELETE 쿼리를 실행합니다.
+                    iterator.remove();
+
+                    log.info("S3 삭제 및 컬렉션에서 제거 완료:{}", image.getUrl());
                 }
             }
+            // 3-4. reviewImageRepository.delete() 호출은 이제 필요 없습니다.
         }
 
-            int currentImageCount=review.getReviewImages().size();
-            int newImageCount=(newImages!=null)?newImages.size():0;
+        // 4. (변경 없음) 이미지 추가 로직
+        int currentImageCount = review.getReviewImages().size(); // (이제 정확한 개수)
+        int newImageCount = (newImages != null) ? newImages.size() : 0;
 
-            //이미지가 2개를 넘는 경우 exception
-            if(currentImageCount+newImageCount>2){
-                throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
-            }
+        if (currentImageCount + newImageCount > 2) {
+            throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
+        }
 
-            List<String> uploadedUrls=new ArrayList<>();
+        List<String> uploadedUrls = new ArrayList<>();
 
-            //추가 이미지 s3 등록
-            if(newImageCount>0){
-                uploadedUrls=s3UploadService.uploadAll(newImages,"reviews");
-            }
+        if (newImageCount > 0) {
+            uploadedUrls = s3UploadService.uploadAll(newImages, "reviews");
+        }
 
-            int nextOrder=review.getReviewImages().stream()
-                    .mapToInt(ReviewImage::getSortOrder).max().orElse(-1)+1;
+        int nextOrder = review.getReviewImages().stream()
+                .mapToInt(ReviewImage::getSortOrder).max().orElse(-1) + 1;
 
-            //업로드 할 사진들 reviewImage list 생성
-            List<ReviewImage> imagesToSave = new ArrayList<>();
-            for(String url: uploadedUrls){
-                imagesToSave.add(ReviewImage.builder()
-                        .url(url)
-                        .review(review)
-                        .sortOrder(nextOrder++)
-                        .build());
-            }
+        List<ReviewImage> imagesToSave = new ArrayList<>();
+        for (String url : uploadedUrls) {
+            imagesToSave.add(ReviewImage.builder()
+                    .url(url)
+                    .review(review)
+                    .sortOrder(nextOrder++)
+                    .build());
+        }
 
-            if(!imagesToSave.isEmpty()) {
-                //repository 저장 성공
-                reviewImageRepository.saveAll(imagesToSave);
-                review.getReviewImages().addAll(imagesToSave);
-                log.info("새 이미지 저장 성공");
-            }
+        if (!imagesToSave.isEmpty()) {
+            // 5. (변경 없음) 새 이미지 저장
+            // CascadeType.ALL (또는 PERSIST)가 설정되어 있어야 함
+            review.getReviewImages().addAll(imagesToSave);
 
-        List<String> finalUrls=review.getReviewImages().stream()
+            // saveAll 대신 review.addAll()만 해도 Cascade로 저장되어야 정상이지만,
+            // id 생성을 위해 saveAll을 명시적으로 호출하는 것도 안전한 방법입니다.
+            reviewImageRepository.saveAll(imagesToSave);
+            log.info("새 이미지 저장 성공");
+        }
+
+        // 6. (변경 없음)
+        // 이제 review.getReviewImages()는 iterator.remove()로 삭제된 것이
+        // '확실하게' 반영된 최신 상태입니다.
+        List<String> finalUrls = review.getReviewImages().stream()
                 .map(ReviewImage::getUrl).collect(Collectors.toList());
 
         return ReviewPhotoUpdateResponse.of(finalUrls);
