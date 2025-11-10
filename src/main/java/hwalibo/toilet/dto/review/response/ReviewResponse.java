@@ -1,4 +1,5 @@
 package hwalibo.toilet.dto.review.response;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hwalibo.toilet.domain.review.Review;
 
 import java.util.Comparator;
@@ -34,7 +35,7 @@ public class ReviewResponse {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
-
+    @JsonProperty("isDis")
     private Boolean isDis; // ERD의 is_dis 필드에 해당
 
 

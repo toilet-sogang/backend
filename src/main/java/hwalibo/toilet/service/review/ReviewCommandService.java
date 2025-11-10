@@ -69,7 +69,6 @@ public class ReviewCommandService {
         } catch (Exception e) {
             throw new IllegalArgumentException("업데이트 실패: " + e.getMessage());
         }
-
         return review.getId();
     }
 }

@@ -1,6 +1,7 @@
 package hwalibo.toilet.dto.review.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.Tag;
 import hwalibo.toilet.dto.review.photo.response.ImageDto;
@@ -21,6 +22,7 @@ public class MyReviewResponse {
     private final Integer star;       // 별점
     private final List<ImageDto> photo; // 사진 URL 리스트
     private final List<String> tag;   // 태그 코드값 리스트 ("TOILET_CLEAN" 등)
+    @JsonProperty("isDis")
     private final boolean isDis;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private final LocalDateTime createdAt;
