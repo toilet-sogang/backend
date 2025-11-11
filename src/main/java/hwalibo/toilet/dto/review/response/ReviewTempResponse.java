@@ -1,6 +1,7 @@
 package hwalibo.toilet.dto.review.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hwalibo.toilet.domain.review.Review;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +28,7 @@ public class ReviewTempResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
+    @JsonProperty("isDis")
     private Boolean isDis; // ERD의 is_dis 필드에 해당
 
     /**

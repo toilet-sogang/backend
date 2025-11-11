@@ -91,17 +91,14 @@ public class ToiletDataLoader {
                 toiletRepository.save(toilet);
                 count++;
             }
-
             log.info("✅ {} toilets successfully loaded into database.", count);
             if (skipped > 0) {
                 log.info("⚠️ {} invalid or empty lines were skipped during import.", skipped);
             }
-
         } catch (Exception e) {
             log.error("❌ Error loading toilet data", e);
         }
     }
-
     // ------------------- Helper methods -------------------
 
     private Integer safeParseInt(String value) {

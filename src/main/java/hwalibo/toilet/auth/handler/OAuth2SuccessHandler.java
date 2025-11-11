@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+
+    @Value("${app.oauth2.redirect-uri}")
+    private String frontendRedirectUri;
 
     @Override
     @Transactional
@@ -46,22 +50,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         log.info("User repository에 Refresh Token 저장 완료");
 
         // 4. 프론트엔드로 리다이렉트할 URL을 동적으로 생성
-        /*String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/auth/callback")
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
-                .build().toUriString();*/
-
-        //개발용: 주석 풀기
-        String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
+        String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();
 
-        /*String targetUrl = UriComponentsBuilder.fromUriString("https://hwalibo-backend.duckdns.org/auth/callback.html")  // EC2 IP 반영
+        //개발용: 주석 풀기
+        /*String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
-                .build().toUriString();*/
-
+                .build().toUriString();
+        */
         log.info("Redirecting to: {}", targetUrl);
 
         // 5. 생성된 URL로 사용자를 리다이렉트

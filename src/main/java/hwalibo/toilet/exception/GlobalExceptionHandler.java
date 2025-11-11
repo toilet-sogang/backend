@@ -12,8 +12,8 @@ import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.exception.review.SummaryGenerationException;
 import hwalibo.toilet.exception.toilet.ToiletNotFoundException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
+import hwalibo.toilet.exception.user.IdenticalNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,8 +52,14 @@ public class GlobalExceptionHandler {
 
     //DuplicateUserNameException
     @ExceptionHandler(DuplicateUserNameException.class)
-    protected ResponseEntity<ApiResponse<?>> handleduplicateUserNameException(DuplicateUserNameException e){
-        return buildErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
+    protected ResponseEntity<ApiResponse<?>> handleDuplicateUserNameException(DuplicateUserNameException e){
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    //IdenticalNicknameException
+    @ExceptionHandler(IdenticalNameException.class)
+    protected ResponseEntity<ApiResponse<?>> handleIdenticalNicknameException(IdenticalNameException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     //InvalidTokenException

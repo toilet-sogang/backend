@@ -7,9 +7,9 @@ import hwalibo.toilet.dto.review.photo.request.ReviewPhotoUpdateRequest;
 import hwalibo.toilet.dto.review.photo.response.ReviewPhotoUpdateResponse;
 import hwalibo.toilet.dto.user.request.UserNameUpdateRequest;
 import hwalibo.toilet.dto.user.response.UserResponse;
-import hwalibo.toilet.dto.user.response.UserUpdateResponse;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.user.DuplicateUserNameException;
+import hwalibo.toilet.exception.user.IdenticalNameException;
 import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
@@ -24,7 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,9 +37,6 @@ public class UserService {
     private final S3UploadService s3UploadService;
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
-
-    /*@PersistenceContext
-    private EntityManager entityManager;*/
 
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
@@ -65,6 +63,34 @@ public class UserService {
                 : 100;
 
         return UserResponse.from(user, rate);
+    }
+
+    @Transactional
+    public UserResponse updateUserName(User loginUser, UserNameUpdateRequest request) {
+        if (loginUser == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(UserNotFoundException::new);
+
+        String newName = request.getName();
+        String currentName = user.getName();
+
+        // 1. 현재 닉네임과 동일한지 *먼저* 검사
+        if (newName.equals(currentName)) {
+            throw new IdenticalNameException("현재 닉네임과 동일한 닉네임입니다.");
+        }
+
+        // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
+        if (userRepository.existsByName(newName)) {
+            throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
+        }
+
+        // 3. 모든 검사를 통과하면 이름 업데이트
+        user.updateName(newName);
+
+        return buildUserResponseWithRate(user);
     }
 
     @Transactional
@@ -148,31 +174,6 @@ public class UserService {
 
         return ReviewPhotoUpdateResponse.of(finalUrls);
     }
-
-
-    @Transactional
-    public UserResponse updateUserName(User loginUser, UserNameUpdateRequest request) {
-        if (loginUser == null) {
-            throw new UnauthorizedException("로그인이 필요합니다.");
-        }
-
-        User user = userRepository.findById(loginUser.getId())
-                .orElseThrow(UserNotFoundException::new);
-
-        String newName = request.getName();
-        String currentName = user.getName();
-
-        // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
-        if (userRepository.existsByName(newName)) {
-            throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
-        }
-
-        // 3. 모든 검사를 통과하면 이름 업데이트
-        user.updateName(newName);
-
-        return buildUserResponseWithRate(user);
-    }
-
 
     private UserResponse buildUserResponseWithRate(User user) {
         // 전체 유저 수

@@ -68,4 +68,8 @@ public class Review {
 
     @LastModifiedDate // 엔티티 수정 시 시간 자동 저장
     private LocalDateTime updatedAt;
+
+    public void updateIsDis(boolean isDis) {
+        this.isDis = isDis;
+    }
 }

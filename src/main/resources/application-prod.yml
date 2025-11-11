@@ -6,6 +6,11 @@ spring:
   application:
     name: demo
 
+  servlet:
+    multipart:
+      max-file-size: 100MB     # 개별 파일 최대 100MB
+      max-request-size: 100MB  # 전체 요청 최대 100MB
+
   data:
     redis:
       host: ${REDIS_HOST}
@@ -72,11 +77,13 @@ cloud:
       static: ap-northeast-2
     stack:
       auto: false
+
 # CORS 설정
 cors:
   allowed-origins:
     - "https://hwalibo-backend.duckdns.org"
-    - "https://frontend.com"
+    - "https://frontendproj-git-main-choiys-projects.vercel.app"
+    - "http://localhost:5173"
 
 logging:
   level:
@@ -84,3 +91,7 @@ logging:
 
 server:
   forward-headers-strategy: framework
+app:
+  oauth2:
+    redirect-uri: http://localhost:5173/auth/callback
+    #https://frontendproj-git-main-choiys-projects.vercel.app/auth/callback

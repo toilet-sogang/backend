@@ -36,13 +36,14 @@ public class ReviewQueryService {
                         r.getId(),
                         r.getToilet().getName(),
                         r.getToilet().getGender(),
-                        r.getToilet().getNumGate(),
+                        r.getToilet().getLine(),
                         r.getDescription(),
                         r.getStar() == null ? null : r.getStar().intValue(),
                         r.getReviewImages().stream()
                                 .map(img->new ImageDto(img.getId(),img.getUrl())) // 각 ReviewImage의 id와 url을 받는 image dto 생성
                                 .collect(Collectors.toList()),// 반환된 String(URL)들을 새 리스트로 수집,
                         r.getTag(),
+                        r.isDis(),
                         r.getCreatedAt(),
                         r.getUpdatedAt()
                 ))
@@ -51,4 +52,3 @@ public class ReviewQueryService {
         return new MyReviewListResponse(items);
     }
 }
-

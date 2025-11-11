@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UserResponse {
+    private Long id;          // id
     private String name;      // 닉네임
     private String profile;   // 프로필 이미지 URL
     private int rate;         // 상위 퍼센트 (정수)
@@ -14,6 +15,7 @@ public class UserResponse {
 
     public static UserResponse from(User user, int rate) {
         return UserResponse.builder()
+                .id(user.getId()) //
                 .name(user.getName())
                 .profile(user.getProfile())
                 .rate(rate)
