@@ -31,32 +31,47 @@ public class ReviewPostService {
     private final ToiletRepository toiletRepository;
 
     @Transactional
-    //리뷰 글 작성
-    public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request,Long toiletId){
+    public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request, Long toiletId) {
 
-        Toilet toilet=toiletRepository.findById(toiletId)
+        // 1. 화장실 엔티티 조회 (기존과 동일)
+        Toilet toilet = toiletRepository.findById(toiletId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
-        Review review=request.toEntity(loginUser,toilet);
+        // 2. 리뷰 엔티티 생성 (기존과 동일)
+        Review review = request.toEntity(loginUser, toilet);
 
+        // 3. 리뷰 저장 (DB에 우선 저장)
         reviewRepository.save(review);
 
-        double newReviewStar=request.getStar();
+        // --- 여기부터 갱신 로직 ---
 
-        double oldStar=toilet.getStar();
-        int oldNumReview=toilet.getNumReview();
+        // 4. (가정) request 객체에서 새 리뷰의 별점을 가져옵니다.
+        // 만약 request에 없다면 review.getStar()를 사용합니다.
+        // ReviewCreateRequest에 getStar() 메소드가 있다고 가정합니다.
+        /*double newReviewStar = request.getStar();
 
-        double oldTotalStars=oldStar*oldNumReview;
-        int newNumReview=oldNumReview++;
-        double newStar=(oldTotalStars+newReviewStar)/newNumReview;
+        // 5. 기존 정보 가져오기
+        double oldStar = toilet.getStar();
+        int oldNumReview = toilet.getNumReview();
 
-        toilet.updateReviewStats(review.getStar());
+        // 6. 새 평균 별점 계산
+        // (기존 총 별점 합계 + 새 리뷰 별점) / (새 리뷰 개수)
+        double oldTotalStars = oldStar * oldNumReview;
+        int newNumReview = oldNumReview + 1;
+        double newAverageStar = (oldTotalStars + newReviewStar) / newNumReview;
 
-        //    @Transactional 어노테이션이 있으므로,
+        // 7. Toilet 엔티티 업데이트 (in-memory)
+        toilet.setStar(newAverageStar);
+        toilet.setNumReview(newNumReview);*/
+
+        // 8. @Transactional 어노테이션이 있으므로,
         //    메소드가 성공적으로 종료될 때 JPA의 'Dirty Checking' 기능이
         //    변경된 toilet 객체를 감지하고 자동으로 UPDATE 쿼리를 실행해줍니다.
         //    (별도의 toiletRepository.save(toilet) 호출이 필요 없습니다.)
 
+        toilet.updateReviewStats(review.getStar());
+
+        // 9. 응답 반환 (기존과 동일)
         return ReviewCreateResponse.of(review);
     }
 

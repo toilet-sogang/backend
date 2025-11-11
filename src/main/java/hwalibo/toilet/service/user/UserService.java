@@ -37,8 +37,8 @@ public class UserService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    /*@PersistenceContext
+    private EntityManager entityManager;*/
 
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
@@ -69,12 +69,13 @@ public class UserService {
 
     @Transactional
     public ReviewPhotoUpdateResponse updateImage(User loginUser, Long reviewId, ReviewPhotoUpdateRequest request, List<MultipartFile> newImages) {
+
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
-        // 1. (수정) N+1을 피하기 위해 User까지 함께 조회합니다.
-        Review review = reviewRepository.findByIdWithUser(reviewId) // (findByIdWithImages 대신 User만 fetch)
+        // 1. 리뷰와 이미지를 '함께' 조회합니다. (영속성 컨텍스트에 올림)
+        Review review = reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
 
         // 2. 권한 검증
@@ -82,75 +83,68 @@ public class UserService {
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
 
-        // 3. (로직 수정) 삭제 로직 - DB에 직접 삭제
-        List<Long> deleteIdList = (request != null) ? request.getDeletedImageIds() : null;
+        // 3. [삭제 로직] (Iterator 사용으로 완벽)
+        if (request != null && request.getDeletedImageIds() != null) {
 
-        if (deleteIdList != null && !deleteIdList.isEmpty()) {
+            Set<Long> idsToDelete = new HashSet<>(request.getDeletedImageIds());
 
-            // 3-1. DB에서 삭제할 이미지 정보 조회
-            List<ReviewImage> imagesToDelete = reviewImageRepository.findAllById(deleteIdList);
+            // 3-1. 'review.getReviewImages()' 컬렉션을 직접 순회
+            Iterator<ReviewImage> iterator = review.getReviewImages().iterator();
 
-            // 3-2. S3 삭제 및 DB 삭제 실행
-            for (ReviewImage image : imagesToDelete) {
-                // (중요) 이 이미지가 이 리뷰의 것이 맞는지 재확인
-                if (image.getReview().getId().equals(reviewId)) {
+            while (iterator.hasNext()) {
+                ReviewImage image = iterator.next();
+
+                if (idsToDelete.contains(image.getId())) {
+                    // a. S3에서 삭제
                     s3UploadService.delete(image.getUrl());
-                    log.info("S3에서 이미지 삭제 완료: {}", image.getUrl());
+
+                    // b. [핵심] 컬렉션에서 제거 (iterator.remove())
+                    // 'orphanRemoval=true'가 이 변경을 감지하고,
+                    // 트랜잭션 커밋 시 DB에서 DELETE 쿼리를 실행합니다.
+                    iterator.remove();
+
+                    log.info("S3 삭제 및 컬렉션에서 제거 완료:{}", image.getUrl());
                 }
             }
-            // 3-3. DB에서 일괄 삭제 (이것이 확실합니다)
-            reviewImageRepository.deleteAllInBatch(imagesToDelete);
-            log.info("DB에서 이미지 삭제 완료");
         }
 
-        // 4. (로직 수정) 현재 이미지 개수를 DB에서 직접 셉니다. (메모리 의존 X)
-        int currentImageCount = reviewImageRepository.countByReviewId(reviewId);
+        // 4. [추가 로직] (변경 없음)
+        int currentImageCount = review.getReviewImages().size(); // (3번에서 삭제된 것이 반영된 정확한 개수)
         int newImageCount = (newImages != null) ? newImages.size() : 0;
 
-        if (currentImageCount - (deleteIdList != null ? deleteIdList.size() : 0) + newImageCount > 2) {
+        if (currentImageCount + newImageCount > 2) {
             throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
         }
 
-        // 5. (변경 없음) S3에 새 이미지 업로드
         List<String> uploadedUrls = new ArrayList<>();
+
         if (newImageCount > 0) {
             uploadedUrls = s3UploadService.uploadAll(newImages, "reviews");
         }
 
-        // 6. (로직 수정) DB에서 현재 최대 sortOrder 조회
-        int nextOrder = reviewImageRepository.findMaxSortOrderByReviewId(reviewId)
-                .orElse(-1) + 1;
+        int nextOrder = review.getReviewImages().stream()
+                .mapToInt(ReviewImage::getSortOrder).max().orElse(-1) + 1;
 
         List<ReviewImage> imagesToSave = new ArrayList<>();
         for (String url : uploadedUrls) {
             imagesToSave.add(ReviewImage.builder()
                     .url(url)
-                    .review(review) // review 객체는 연관관계 참조용으로만 사용
+                    .review(review) // 👈 부모(review)와의 연관관계 설정
                     .sortOrder(nextOrder++)
                     .build());
         }
 
+        // 5. [새 이미지 저장] (🚨가장 중요🚨)
         if (!imagesToSave.isEmpty()) {
-            // 7. (변경 없음) 새 이미지들을 DB에 저장
-            reviewImageRepository.saveAll(imagesToSave);
-            reviewImageRepository.flush();
-            log.info("새 이미지 저장 성공");
+
+            // (핵심) 'cascade = CascadeType.ALL'을 믿고 리스트에 더하기만 합니다.
+            // JPA가 'review'가 영속 상태인 것을 알고,
+            // 트랜잭션 커밋 시 알아서 INSERT 쿼리를 실행합니다.
+            review.getReviewImages().addAll(imagesToSave);
+            log.info("새 이미지 저장 성공 (컬렉션에 추가 완료)");
         }
-
-        // --- ⭐️ 여기가 핵심 ⭐️ ---
-        // 8. (추가) 모든 DB 작업이 끝났으므로,
-        //      영속성 컨텍스트의 'review' 객체를 버리고,
-        //      DB에서 '최신 상태의 리뷰와 이미지 목록'을 다시 조회합니다.
-
-        entityManager.flush();
-        entityManager.clear();
-
-        Review refreshedReview = reviewRepository.findByIdWithImages(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
-
-        List<String> finalUrls = refreshedReview.getReviewImages().stream()
-                .map(ReviewImage::getUrl)
-                .collect(Collectors.toList());
+        List<String> finalUrls = review.getReviewImages().stream()
+                .map(ReviewImage::getUrl).collect(Collectors.toList());
 
         return ReviewPhotoUpdateResponse.of(finalUrls);
     }

@@ -3,13 +3,11 @@ package hwalibo.toilet.domain.toilet;
 import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.InOut;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -51,10 +49,21 @@ public class Toilet {
     private Integer numReview; // 리뷰 개수
 
     //별점 및 리뷰 갯수 갱신 함수
-    public void updateReviewStats(double newReviewStar){
-        double oldTotalStars=this.star*this.numReview;
-        this.numReview++;
+    public void updateReviewStats(double newReviewStar) {
 
-        this.star=(oldTotalStars+newReviewStar)/this.numReview;
+        // 1. (변경점) null 체크 및 0으로 초기화
+        // DB에서 가져온 값이 null일 경우를 대비해 0.0과 0으로 처리합니다.
+        double currentStar = (this.star != null) ? this.star : 0.0;
+        int currentNumReview = (this.numReview != null) ? this.numReview : 0;
+
+        // 2. 기존 로직 수행
+        // (안전하게 초기화된 currentStar, currentNumReview 사용)
+        double oldTotalStars = currentStar * currentNumReview;
+        int newNumReview = currentNumReview + 1;
+        double newAverageStar = (oldTotalStars + newReviewStar) / newNumReview;
+
+        // 3. 값 갱신
+        this.star = newAverageStar;
+        this.numReview = newNumReview;
     }
 }
