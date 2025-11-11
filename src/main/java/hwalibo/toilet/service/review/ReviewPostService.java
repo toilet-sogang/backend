@@ -40,6 +40,23 @@ public class ReviewPostService {
         Review review=request.toEntity(loginUser,toilet);
 
         reviewRepository.save(review);
+
+        double newReviewStar=request.getStar();
+
+        double oldStar=toilet.getStar();
+        int oldNumReview=toilet.getNumReview();
+
+        double oldTotalStars=oldStar*oldNumReview;
+        int newNumReview=oldNumReview++;
+        double newStar=(oldTotalStars+newReviewStar)/newNumReview;
+
+        toilet.updateReviewStats(review.getStar());
+
+        //    @Transactional 어노테이션이 있으므로,
+        //    메소드가 성공적으로 종료될 때 JPA의 'Dirty Checking' 기능이
+        //    변경된 toilet 객체를 감지하고 자동으로 UPDATE 쿼리를 실행해줍니다.
+        //    (별도의 toiletRepository.save(toilet) 호출이 필요 없습니다.)
+
         return ReviewCreateResponse.of(review);
     }
 

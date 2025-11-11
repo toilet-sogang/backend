@@ -1,5 +1,6 @@
 package hwalibo.toilet.dto.review.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.type.Tag;
@@ -33,6 +34,7 @@ public class ReviewCreateRequest {
     private List<String> tag;
 
     @NotNull(message="장애인 화장실 여부는 필수 선택해야합니다.")
+    @JsonProperty("isDis")
     private boolean isDis;
     // DTO → Entity 변환
     // 실제 서비스 로직에서는 이 메서드로 생성된 Review 객체에

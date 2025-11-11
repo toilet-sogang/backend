@@ -77,6 +77,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "ORDER BY r.createdAt DESC")
     // [!] 메서드 이름 변경 및 tag 파라미터 제거
     List<Review> findByToiletId_HandicappedOnly(@Param("toiletId") Long toiletId);
+
+    /**
+     * ID로 Review를 조회할 때, User 객체(LAZY)를 N+1 없이 즉시 로딩(EAGER)합니다.
+     */
+    @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.id = :reviewId")
+    Optional<Review> findByIdWithUser(@Param("reviewId") Long reviewId);
 }
 
 

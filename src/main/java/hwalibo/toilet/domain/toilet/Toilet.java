@@ -49,4 +49,12 @@ public class Toilet {
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
     private Integer numReview; // 리뷰 개수
+
+    //별점 및 리뷰 갯수 갱신 함수
+    public void updateReviewStats(double newReviewStar){
+        double oldTotalStars=this.star*this.numReview;
+        this.numReview++;
+
+        this.star=(oldTotalStars+newReviewStar)/this.numReview;
+    }
 }
