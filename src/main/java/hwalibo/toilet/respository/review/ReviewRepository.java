@@ -14,32 +14,16 @@ import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    /**
-     * 특정 화장실에 달린 모든 리뷰를 페이징 처리하여 조회합니다.
-     * @param toilet 조회할 화장실 엔티티
-     * @param pageable 페이지 번호, 페이지 당 개수, 정렬 방법 등을 담는 객체
-     * @return Page<Review>
-     */
-    Page<Review> findAllByToilet(Toilet toilet, Pageable pageable);
 
     @Query("SELECT DISTINCT r FROM Review r " +
             "LEFT JOIN FETCH r.reviewImages ri " +
             "WHERE r.user = :user ")
     List<Review> findAllByUser(@Param("user") User user);
 
-    /**
-     * 특정 사용자가 특정 화장실에 리뷰를 이미 작성했는지 확인할 때 사용합니다.
-     * @param user 사용자 엔티티
-     * @param toilet 화장실 엔티티
-     * @return Optional<Review>
-     */
-    Optional<Review> findByUserAndToilet(User user, Toilet toilet);
 
     // toilet_id 기준으로 리뷰 정렬 조회
     List<Review> findByToiletIdOrderByCreatedAtAsc(Long toiletId);
 
-    //count 메서드
-    long countByToiletId(Long toiletId);
 
     //id로 review와 reviewImage 찾기
     @Query("SELECT r FROM Review r LEFT JOIN FETCH r.reviewImages WHERE r.id = :reviewId")
@@ -77,12 +61,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "ORDER BY r.createdAt DESC")
     // [!] 메서드 이름 변경 및 tag 파라미터 제거
     List<Review> findByToiletId_HandicappedOnly(@Param("toiletId") Long toiletId);
-
-    /**
-     * ID로 Review를 조회할 때, User 객체(LAZY)를 N+1 없이 즉시 로딩(EAGER)합니다.
-     */
-    @Query("SELECT r FROM Review r JOIN FETCH r.user WHERE r.id = :reviewId")
-    Optional<Review> findByIdWithUser(@Param("reviewId") Long reviewId);
 }
 
 

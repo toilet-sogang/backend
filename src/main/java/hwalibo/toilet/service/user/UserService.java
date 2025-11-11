@@ -91,29 +91,29 @@ public class UserService {
 
         return buildUserResponseWithRate(user);
     }
-
     @Transactional
     public ReviewPhotoUpdateResponse updateImage(User loginUser, Long reviewId, ReviewPhotoUpdateRequest request, List<MultipartFile> newImages) {
-
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
-        // 1. 리뷰와 이미지를 '함께' 조회합니다. (영속성 컨텍스트에 올림)
-        Review review = reviewRepository.findByIdWithImages(reviewId)
+        // 1. (🚨핵심 수정🚨) 'JOIN FETCH' 쿼리 대신, '부모' 엔티티만 조회합니다.
+        // 'reviewImages' 리스트는 아직 로드되지 않은 'Lazy Loading' 상태입니다.
+        Review review = reviewRepository.findById(reviewId) // 👈 'WithImages'가 빠졌습니다.
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
 
-        // 2. 권한 검증
+        // 2. (변경 없음) 권한 검증
         if (!review.getUser().getId().equals(loginUser.getId())) {
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
 
-        // 3. [삭제 로직] (Iterator 사용으로 완벽)
+        // 3. [삭제 로직]
         if (request != null && request.getDeletedImageIds() != null) {
-
             Set<Long> idsToDelete = new HashSet<>(request.getDeletedImageIds());
 
-            // 3-1. 'review.getReviewImages()' 컬렉션을 직접 순회
+            // 3-1. (⭐️중요⭐️) 'review.getReviewImages()'에 *처음 접근*하는 순간,
+            // JPA가 "아, 이제 자식 리스트가 필요하구나"라고 인지하고
+            // Lazy Loading으로 '수정 가능한' 리스트를 DB에서 SELECT 해옵니다.
             Iterator<ReviewImage> iterator = review.getReviewImages().iterator();
 
             while (iterator.hasNext()) {
@@ -123,9 +123,8 @@ public class UserService {
                     // a. S3에서 삭제
                     s3UploadService.delete(image.getUrl());
 
-                    // b. [핵심] 컬렉션에서 제거 (iterator.remove())
-                    // 'orphanRemoval=true'가 이 변경을 감지하고,
-                    // 트랜잭션 커밋 시 DB에서 DELETE 쿼리를 실행합니다.
+                    // b. '수정 가능한' 리스트에서 삭제 (정상 동작)
+                    // 'orphanRemoval=true'가 100% 인지하고 DB에 'DELETE'를 예약합니다.
                     iterator.remove();
 
                     log.info("S3 삭제 및 컬렉션에서 제거 완료:{}", image.getUrl());
@@ -134,7 +133,7 @@ public class UserService {
         }
 
         // 4. [추가 로직] (변경 없음)
-        int currentImageCount = review.getReviewImages().size(); // (3번에서 삭제된 것이 반영된 정확한 개수)
+        int currentImageCount = review.getReviewImages().size();
         int newImageCount = (newImages != null) ? newImages.size() : 0;
 
         if (currentImageCount + newImageCount > 2) {
@@ -142,7 +141,6 @@ public class UserService {
         }
 
         List<String> uploadedUrls = new ArrayList<>();
-
         if (newImageCount > 0) {
             uploadedUrls = s3UploadService.uploadAll(newImages, "reviews");
         }
@@ -154,24 +152,33 @@ public class UserService {
         for (String url : uploadedUrls) {
             imagesToSave.add(ReviewImage.builder()
                     .url(url)
-                    .review(review) // 👈 부모(review)와의 연관관계 설정
+                    .review(review) // 부모(review)와의 연관관계 설정
                     .sortOrder(nextOrder++)
                     .build());
         }
 
-        // 5. [새 이미지 저장] (🚨가장 중요🚨)
+        // 5. [새 이미지 저장]
         if (!imagesToSave.isEmpty()) {
 
-            // (핵심) 'cascade = CascadeType.ALL'을 믿고 리스트에 더하기만 합니다.
-            // JPA가 'review'가 영속 상태인 것을 알고,
-            // 트랜잭션 커밋 시 알아서 INSERT 쿼리를 실행합니다.
+            // 5-1. (핵심) '수정 가능한' 리스트에 새 이미지를 추가합니다.
+            // 'cascade=ALL'이 100% 인지하고 DB에 'INSERT'를 예약합니다.
             review.getReviewImages().addAll(imagesToSave);
+
+            // 5-2. (🚨삭제 필수🚨)
+            // 충돌을 일으키는 수동 saveAll()은 반드시 없어야 합니다.
+            // reviewImageRepository.saveAll(imagesToSave); // 👈 삭제 확인!
+
             log.info("새 이미지 저장 성공 (컬렉션에 추가 완료)");
         }
-        List<String> finalUrls = review.getReviewImages().stream()
-                .map(ReviewImage::getUrl).collect(Collectors.toList());
 
-        return ReviewPhotoUpdateResponse.of(finalUrls);
+        Review updatedReview = reviewRepository.findByIdWithImages(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
+
+
+        List<ReviewImage> finalImages = updatedReview.getReviewImages();
+
+        return ReviewPhotoUpdateResponse.of(finalImages);
+
     }
 
     private UserResponse buildUserResponseWithRate(User user) {

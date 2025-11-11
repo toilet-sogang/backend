@@ -85,6 +85,9 @@ public class UserReviewController {
         if(requestString != null) {
             try {
                 request = objectMapper.readValue(requestString, ReviewPhotoUpdateRequest.class);
+                if (request.getDeletedImageIds() == null) {
+                    throw new IllegalArgumentException("JSON 필드명이 잘못되었습니다. 'deletedImageIds' 필드를 찾을 수 없습니다.");
+                }
             } catch (Exception e) {
                 throw new IllegalArgumentException("잘못된 JSON 형식의 요청입니다.");
             }

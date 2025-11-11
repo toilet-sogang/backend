@@ -1,5 +1,6 @@
 package hwalibo.toilet.dto.review.photo.response;
 
+import hwalibo.toilet.domain.review.ReviewImage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,10 +17,13 @@ public class ReviewPhotoUpdateResponse {
     private List<PhotoUrlResponse> photos;
 
     // Service Layer의 List<String> URL들을 Response DTO로 변환하는 팩토리 메서드
-    public static ReviewPhotoUpdateResponse of(List<String> urls) {
+    public static ReviewPhotoUpdateResponse of(List<ReviewImage> urls) {
         List<PhotoUrlResponse> photoResponses = urls.stream()
                 // String URL -> PhotoUrlResponse 객체로 변환
-                .map(url -> PhotoUrlResponse.builder().photoUrl(url).build())
+                .map(image -> PhotoUrlResponse.builder()
+                        .photoUrl(image.getUrl())
+                        .photoId(image.getId())
+                        .build())
                 .collect(Collectors.toList());
 
         return ReviewPhotoUpdateResponse.builder()

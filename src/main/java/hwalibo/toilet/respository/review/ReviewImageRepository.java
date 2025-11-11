@@ -60,12 +60,6 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "WHERE ri.id = :photoId")
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
 
-    // 1. 현재 리뷰에 달린 이미지 개수 (메모리 대신 DB에서 조회)
-    int countByReviewId(Long reviewId);
-
-    // 2. 현재 리뷰의 이미지 중 가장 큰 sortOrder (메모리 대신 DB에서 조회)
-    @Query("SELECT MAX(ri.sortOrder) FROM ReviewImage ri WHERE ri.review.id = :reviewId")
-    Optional<Integer> findMaxSortOrderByReviewId(@Param("reviewId") Long reviewId);
 }
 
 

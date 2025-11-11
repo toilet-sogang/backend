@@ -17,10 +17,5 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
      */
     Optional<Likes> findByUserAndReview(User user, Review review);
 
-    /**
-     * 특정 리뷰에 달린 '좋아요'의 총 개수를 조회합니다.
-     * @param review 리뷰 엔티티
-     * @return long
-     */
-    long countByReview(Review review);
+
 }
