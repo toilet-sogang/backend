@@ -89,7 +89,6 @@ jobs:
 
             # 5. Create docker-compose.yml file (Ensure correct content and use environment variables)
             cat <<EOF > docker-compose.yml
-            version: "3.9"
 
             services:
               app:
