@@ -48,7 +48,7 @@ public class ToiletDataLoader {
 
                 String[] tokens = line.split(",");
 
-                // ✅ 컬럼 수 부족 시 skip (11개 미만인 경우)
+                // ✅ 컬럼 수 부족하면 skip (11개 미만인 경우)
                 if (tokens.length < 11) {
                     log.warn("⚠️ Skipped invalid line (too few columns): {}", line);
                     skipped++;
