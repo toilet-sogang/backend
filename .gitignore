@@ -40,3 +40,6 @@ out/
 .env
 
 .jwt_secret
+
+# Google Cloud Service Account Key
+*.json

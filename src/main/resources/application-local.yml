@@ -81,3 +81,7 @@ cloud:
       static: ap-northeast-2
     stack:
       auto: false
+
+google:
+  credentials:
+    path: "classpath:hwalibo-995529f0307e.json"

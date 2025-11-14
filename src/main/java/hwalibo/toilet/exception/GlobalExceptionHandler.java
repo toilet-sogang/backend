@@ -6,6 +6,7 @@ import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
 import hwalibo.toilet.exception.image.ImageCountInvalidException;
 import hwalibo.toilet.exception.image.ImageNotFoundException;
+import hwalibo.toilet.exception.image.InvalidImageException;
 import hwalibo.toilet.exception.review.AlreadyLikedException;
 import hwalibo.toilet.exception.review.NotLikedException;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
@@ -115,6 +116,11 @@ public class GlobalExceptionHandler {
     //이미지 0~2 외의 개수 등록
     @ExceptionHandler(ImageCountInvalidException.class)
     public ResponseEntity<ApiResponse<?>> ImageCountInvalidException(ImageCountInvalidException e){
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ApiResponse<?>> InvalidImageException(InvalidImageException e){
         return buildErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage());
     }
 

@@ -16,6 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     //리뷰 개수 비교
     long countByNumReviewGreaterThan(Integer numReview);
 
-    //닉네임 중복 여부 확인
+   //닉네임 중복 여부 확인
     boolean existsByName(String name);
 }

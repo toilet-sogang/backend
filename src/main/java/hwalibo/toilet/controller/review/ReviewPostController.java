@@ -2,6 +2,7 @@ package hwalibo.toilet.controller.review;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.user.User;
+import hwalibo.toilet.dto.chat.response.ImageStatusResponse;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
 import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
@@ -72,6 +73,23 @@ public class ReviewPostController {
                         true,
                         HttpStatus.CREATED.value(),
                         "이미지 업로드 성공",
+                        data
+                ));
+    }
+
+    @Operation(
+            summary = "이미지 검사 상태 폴링 API",
+            description = "이미지 PENDING/APPROVED 여부를 받는다",
+            security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @GetMapping("/api/v1/reviews/{reviewId}/image-status")
+    public ResponseEntity<ApiResponse<List<ImageStatusResponse>>> checkImageStatus(@AuthenticationPrincipal User loginUser, @PathVariable Long reviewId){
+        List<ImageStatusResponse> data= reviewPostService.getImageStatuses(loginUser,reviewId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(new ApiResponse<>(
+                        true,
+                        HttpStatus.ACCEPTED.value(),
+                        "이미지 폴링 성공",
                         data
                 ));
     }

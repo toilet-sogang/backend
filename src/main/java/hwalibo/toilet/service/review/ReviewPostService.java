@@ -4,6 +4,7 @@ import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.user.User;
+import hwalibo.toilet.dto.chat.response.ImageStatusResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
 import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
 import hwalibo.toilet.dto.review.response.ReviewCreateResponse;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,6 +31,7 @@ public class ReviewPostService {
     private final ReviewImageRepository reviewImageRepository;
     private final S3UploadService s3UploadService;
     private final ToiletRepository toiletRepository;
+    private final GoogleVisionValidationService googleVisionValidationService;
 
     @Transactional
     public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request, Long toiletId) {
@@ -86,14 +89,15 @@ public class ReviewPostService {
         //생성된 리뷰 찾기
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
+
         List<String> uploadedUrls;
-        //S3저장
+        //S3저장(동기식)
         uploadedUrls = s3UploadService.uploadAll(images, "reviews");
 
         int nextOrder = 0;
 
         List<ReviewImage> newImages = new ArrayList<>();
-        //ReviewImage로 변환
+        //ReviewImage로 변환(PENDING 상태)
         for (String url : uploadedUrls) {
             newImages.add(ReviewImage.builder()
                     .url(url)
@@ -105,7 +109,29 @@ public class ReviewPostService {
         //db에 이미지 저장
         List<ReviewImage> savedImages = reviewImageRepository.saveAll(newImages);
 
+        //저장된 이미지들을 비동기 검증 서비스에 전달
+        for(int i=0;i<savedImages.size();i++){
+            ReviewImage savedImage=savedImages.get(i);
+            try {
+                googleVisionValidationService.validateImage(savedImage.getId(), savedImage.getUrl());
+            }catch(Exception e){
+                throw new RuntimeException("비동기 호출에서 예외 발생");
+            }
+        }
         return PhotoUploadResponse.of(savedImages);
+    }
+
+    @Transactional(readOnly=true)
+    public List<ImageStatusResponse> getImageStatuses(User loginUser, Long reviewId){
+        if (loginUser == null) {
+            throw new SecurityException("유효하지 않은 토큰입니다.");
+        }
+
+        List<ReviewImage> images = reviewImageRepository.findByReviewId(reviewId);
+
+        return images.stream()
+                .map(ImageStatusResponse::new)
+                .collect(Collectors.toList());
     }
     }
 
