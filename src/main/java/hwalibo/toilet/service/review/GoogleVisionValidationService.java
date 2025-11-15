@@ -1,6 +1,7 @@
 package hwalibo.toilet.service.review;
 
-import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.cloud.vision.v1.*;
+import com.google.protobuf.ByteString;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.dto.chat.request.Content;
 import hwalibo.toilet.dto.chat.request.GptValidationRequest;
@@ -10,6 +11,7 @@ import hwalibo.toilet.dto.chat.response.GptValidationResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.service.s3.S3DownloadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -21,82 +23,137 @@ import reactor.core.publisher.Mono;
 import java.util.Base64;
 import java.util.List;
 
+@Slf4j
 @Service
-@Requi
+@RequiredArgsConstructor
 public class GoogleVisionValidationService {
-    private ReviewImageRepository reviewImageRepository;
+    private final ReviewImageRepository reviewImageRepository;
     private final S3DownloadService s3DownloadService;
+    private final ImageAnnotatorClient imageAnnotatorClient; // Google 클라이언트
 
-    @Qualifier("openAIWebClient")
-    private final ImageAnnotatorClient imageAnnotatorClient;
-
-    @Value("${openai.model:gpt-4o-mini")
-    private String gptModel;
-
-    //프롬프트 작성
-    private static final String VALIDATION_PROMPT="""
-        당신은 업로드된 이미지를 검수하는 AI입니다.
-        다음 4가지 규칙에 따라 이미지가 유효한지 검사하고,
-        만약 하나라도 위반하면 [사유]와 함께 그 이유를, 모두 통과하면 "VALID"라고만 응답해 주세요.
-
-        [검수 규칙]
-        1. 사진이 화장실(변기, 소변기 등) 내부를 주로 찍은 사진인가? (화장실 리뷰 서비스이므로 OK)
-           -> [수정] 화장실이 아닌 다른 장소(예: 방, 사무실, 풍경) 사진이면 거부해야 합니다.
-        2. 과도한 텍스트 오버레이, 스크린샷, 타사 워터마크가 포함되어 있는가?
-        3. 선정적이거나(성적 노출), 폭력적이거나, 혐오스러운(피, 상처 등) 장면이 있는가?
-        4. 이미지가 너무 흐리거나, 깨지거나, 형태를 식별 불가능한가?
-
-        [응답 형식]
-        - 통과 시: VALID
-        - 실패 시: [사유] (실패한 이유)
-        """;
-
-    /**
-     * [신규] 비동기 검증 메서드
-     * @Async 어노테이션에 의해 이 메서드는 별도 스레드에서 실행됩니다.
-     * reviewImageId DB에 저장된 이미지의 ID
-     * imageUrl 검증할 이미지의 S3 URL
-     */
     @Async
     @Transactional
     public void validateImage(Long reviewImageId, String imageUrl) {
-        String gptResponse = "VALIDATION_ERROR";
+        ValidationResult validationResult;
+
         try {
-            byte[] imageBytes = s3DownloadService.getBytes();
-            //Baas 64 인코딩
-            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            // [수정] s3DownloadService.download(imageUrl) 호출
+            byte[] imageBytes = s3DownloadService.download(imageUrl);
 
-            //AI API 호출(동기식)
-            gptResponse = callGptVisionApi(base64Image).block(); //10초 대기
+            // [수정] Google Vision AI API 호출
+            validationResult = analyzeImageWithGoogleVision(imageBytes);
+            log.info("Google Vision response for {}: {}", reviewImageId, validationResult.reason);
 
-            updateImageStatus(reviewImageId, gptResponse);
         } catch (Exception e) {
-            throw new RuntimeException("이미지 검수 GPT AI 사용에 오류가 생겼습니다");
+            log.error("Error during Google Vision validation for imageId: {}: {}", reviewImageId, e.getMessage(), e);
+            validationResult = new ValidationResult(false, "[사유] AI 검증 중 서버 오류 발생");
         }
+
+        updateImageStatus(reviewImageId, validationResult);
     }
 
+    // Google Vision AI를 호출하는 (OpenAI가 아닌) 실제 로직
+    private ValidationResult analyzeImageWithGoogleVision(byte[] imageBytes) throws IOException {
+        ByteString byteString = ByteString.copyFrom(imageBytes);
+        Image image = Image.newBuilder().setContent(byteString).build();
 
+        List<Feature> features = List.of(
+                Feature.newBuilder().setType(Feature.Type.SAFE_SEARCH_DETECTION).build(),
+                Feature.newBuilder().setType(Feature.Type.LABEL_DETECTION).setMaxResults(5).build()
+        );
+
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder()
+                .setImage(image)
+                .addAllFeatures(features)
+                .build();
+
+        BatchAnnotateImagesResponse response = imageAnnotatorClient.batchAnnotateImages(List.of(request));
+        AnnotateImageResponse result = response.getResponses(0);
+
+        if (result.hasError()) {
+            log.error("Google Vision API Error: {}", result.getError().getMessage());
+            return new ValidationResult(false, "Google AI API 오류 발생");
+        }
+
+        SafeSearchAnnotation safeSearch = result.getSafeSearchAnnotation();
+        if (isUnsafe(safeSearch.getAdult()) || isUnsafe(safeSearch.getViolence()) || isUnsafe(safeSearch.getRacy())) {
+            return new ValidationResult(false, "선정적이거나 폭력적인 콘텐츠가 포함되어 있습니다.");
+        }
+        if (isUnsafe(safeSearch.getSpoof())) {
+            return new ValidationResult(false, "스크린샷 또는 부적절한 텍스트/워터마크가 의심됩니다.");
+        }
+
+        List<EntityAnnotation> labels = result.getLabelAnnotationsList();
+        if (labels.isEmpty()) {
+            return new ValidationResult(false, "이미지를 식별할 수 없습니다. (흐릿하거나 깨짐)");
+        }
+
+        boolean isToiletRelated = labels.stream().anyMatch(l ->
+                (l.getDescription().equalsIgnoreCase("Toilet") ||
+                        l.getDescription().equalsIgnoreCase("Bathroom") ||
+                        l.getDescription().equalsIgnoreCase("Urinal") ||
+                        l.getDescription().equalsIgnoreCase("Restroom"))
+                        && l.getScore() > 0.7
+        );
+
+        if (!isToiletRelated) {
+            String topLabel = labels.get(0).getDescription();
+            return new ValidationResult(false, "화장실과 관련 없는 사진입니다. (주요 주제: " + topLabel + ")");
+        }
+
+        return new ValidationResult(true, "VALID");
+    }
+
+    private void updateImageStatus(Long reviewImageId, ValidationResult result) {
+        ReviewImage image = reviewImageRepository.findById(reviewImageId)
+                .orElse(null);
+
+        if (image == null) {
+            log.error("Image not found after validation: {}", reviewImageId);
+            return;
+        }
+
+        if (result.valid) {
+            image.approve();
+        }
+
+        reviewImageRepository.save(image);
+    }
+
+    private boolean isUnsafe(Likelihood likelihood) {
+        return likelihood == Likelihood.LIKELY || likelihood == Likelihood.VERY_LIKELY;
+    }
+
+    private static class ValidationResult {
+        final boolean valid;
+        final String reason;
+
+        ValidationResult(boolean valid, String reason) {
+            this.valid = valid;
+            this.reason = reason;
+        }
+    }
 
     /**
      * 실제 OpenAI Vision API를 호출하는 메서드 (비동기 Mono 반환)
      */
-    private Mono<String> callGptVisionApi(String base64Image){
-       //Base64 데이터로 ImageUrl 객체 생성 (MIME 타입은 jpeg로 가정, 필요시 수정)
-        String imageUrlString="data:image/jpeg;base64,"+base64Image;
-        ImageUrl imageUrl=ImageUrl.builder().url(imageUrlString).detail("low").build();
+    private Mono<String> callGptVisionApi(String base64Image) {
+        //Base64 데이터로 ImageUrl 객체 생성 (MIME 타입은 jpeg로 가정, 필요시 수정)
+        String imageUrlString = "data:image/jpeg;base64," + base64Image;
+        ImageUrl imageUrl = ImageUrl.builder().url(imageUrlString).detail("low").build();
 
         //프롬프트와 이미지 content 객체 생성
-        Content textContent=Content.builder().type("text").text(VALIDATION_PROMPT).build();
-        Content imageContent=Content.builder().type("image_url").image_url(imageUrl).build();
+        Content textContent = Content.builder().type("text").text(VALIDATION_PROMPT).build();
+        Content imageContent = Content.builder().type("image_url").image_url(imageUrl).build();
 
         //Message 객체 생성
-        Message message= Message.builder()
+        Message message = Message.builder()
                 .role("user")
-                .content(List.of(textContent,imageContent))
+                .content(List.of(textContent, imageContent))
                 .build();
 
         //최종 DTO 생성
-        GptValidationRequest requestDto=GptValidationRequest.builder()
+        GptValidationRequest requestDto = GptValidationRequest.builder()
                 .model(gptModel)
                 .messages(List.of(message))
                 .max_tokens(300) //응답 토큰 수
@@ -118,14 +175,13 @@ public class GoogleVisionValidationService {
 
     }
 
-    private void updateImageStatus(Long reviewImageId, String gptResponse){
-        ReviewImage image=reviewImageRepository.findById(reviewImageId)
+    private void updateImageStatus(Long reviewImageId, String gptResponse) {
+        ReviewImage image = reviewImageRepository.findById(reviewImageId)
                 .orElse(null);
-        if(image==null) return;
-        if(gptResponse!=null&&"VALID".equalsIgnoreCase(gptResponse.trim())){
+        if (image == null) return;
+        if (gptResponse != null && "VALID".equalsIgnoreCase(gptResponse.trim())) {
             image.approve();
         }
         reviewImageRepository.save(image);
     }
-
 }

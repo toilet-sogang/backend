@@ -32,7 +32,7 @@ public class GoogleVisionConfig {
         //파일 스트림에서 서비스 계정 인증 정보 로드
         try(InputStream inputStream=resource.getInputStream()){
             GoogleCredentials credentials= GoogleCredentials.fromStream(inputStream)
-                    .createScoped(ImageAnnotatorClient.getDefaultScopes);
+                    .createScoped(ImageAnnotatorClient.getDefaultScopes());
 
             //인증정보 사용하여 Vision AI 클라이언트 설정 빌드
             ImageAnnotatorSettings settings=ImageAnnotatorSettings.newBuilder()
