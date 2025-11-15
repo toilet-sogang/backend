@@ -73,6 +73,10 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
+    //유저의 리뷰 개수 추가
+    public void addReview() {
+        this.numReview++;
+    }
 
     // ========= UserDetails 인터페이스 구현  ========== //
 
