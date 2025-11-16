@@ -91,7 +91,6 @@ logging:
 
 server:
   forward-headers-strategy: framework
-
 app:
   oauth2:
     redirect-uri: http://localhost:5173/auth/callback
