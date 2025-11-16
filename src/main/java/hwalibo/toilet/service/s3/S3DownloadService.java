@@ -26,7 +26,7 @@ public class S3DownloadService {
  * GptValidationService에서 AI 검증을 위해 사용됩니다.
  * */
 
-    public byte[] download(String fileUrl) throws IOException, AmazonS3Exception{
+    public byte[] getBytes(String fileUrl) throws IOException, AmazonS3Exception{
         String key=getKeyFromUrl(fileUrl);
 
         try{
