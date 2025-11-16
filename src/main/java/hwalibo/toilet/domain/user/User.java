@@ -56,6 +56,8 @@ public class User implements UserDetails {
     // 네이버 'profile_image' URL 하나를 저장할 필드
     private String profile;
 
+
+
     // 이름 업데이트 메서드
     public void updateName(String newName) {
         this.name = newName;
@@ -73,6 +75,10 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
+    //유저의 리뷰 개수 추가
+    public void addReview() {
+        this.numReview++;
+    }
 
     // ========= UserDetails 인터페이스 구현  ========== //
 
