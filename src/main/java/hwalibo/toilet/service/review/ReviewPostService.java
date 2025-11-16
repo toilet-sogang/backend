@@ -13,6 +13,7 @@ import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.respository.user.UserRepository;
 import hwalibo.toilet.service.review.GoogleVisionValidationService;
+import hwalibo.toilet.respository.user.UserRepository;
 import hwalibo.toilet.service.s3.S3UploadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

@@ -12,11 +12,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       # === DB / Redis (내부 네트워크 호스트네임 사용) ===
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/toiletsystem?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8          # 예: jdbc:mysql://db:3306/toiletsystem?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/toiletsystem?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_DATA_REDIS_HOST=${REDIS_HOST}      # 예: redis
-      - SPRING_DATA_REDIS_PORT=${REDIS_PORT}      # 예: 6379
+      - SPRING_DATA_REDIS_HOST=${REDIS_HOST}
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT}
 
       # === JWT / OAuth2 ===
       - JWT_SECRET=${JWT_SECRET}
@@ -24,18 +24,23 @@ services:
       - JWT_REFRESH_VALIDITY=${JWT_REFRESH_VALIDITY}
       - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
-      # ↓ prod 프로필에서 application-prod.yml로 고정했으면 생략 가능
-      # - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
+      # - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}  # prod 고정이면 생략
 
       # === 기타 ===
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TZ=Asia/Seoul
 
-      # AWS 크리덴셜은 가능하면 EC2 Role 사용 권장(키 노출 위험↓)
-      # 필요 시 .env에서만 주입
+      # === AWS (가능하면 EC2 Role 권장) ===
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+
+      # === Google Cloud 인증 ===
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/config/service-account.json
+
+    volumes:
+      # CI/CD에서 만든 ./service-account.json을 컨테이너 내부로 마운트
+      - ./service-account.json:/app/config/service-account.json:ro
 
     restart: unless-stopped
 
@@ -59,7 +64,7 @@ services:
     volumes:
       - db-data:/var/lib/mysql
     # ⚠️ 외부 포트 공개 금지 (내부 네트워크로만 접근)
-    # ports: ["3306:3306"]  # 제거
+    # ports: ["3306:3306"]
     restart: unless-stopped
 
   redis:
@@ -73,9 +78,10 @@ services:
     volumes:
       - redis-data:/data
     # ⚠️ 외부 포트 공개 금지
-    # ports: ["6379:6379"]  # 제거
+    # ports: ["6379:6379"]
     restart: unless-stopped
 
 volumes:
   db-data:
   redis-data:
+
