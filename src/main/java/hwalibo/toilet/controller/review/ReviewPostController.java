@@ -77,21 +77,6 @@ public class ReviewPostController {
                 ));
     }
 
-    @Operation(
-            summary = "이미지 검사 상태 폴링 API",
-            description = "이미지 PENDING/APPROVED 여부를 받는다",
-            security = { @SecurityRequirement(name = "bearerAuth") }
-    )
-    @GetMapping("/api/v1/reviews/{reviewId}/image-status")
-    public ResponseEntity<ApiResponse<List<ImageStatusResponse>>> checkImageStatus(@AuthenticationPrincipal User loginUser, @PathVariable Long reviewId){
-        List<ImageStatusResponse> data= reviewPostService.getImageStatuses(loginUser,reviewId);
-        return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new ApiResponse<>(
-                        true,
-                        HttpStatus.ACCEPTED.value(),
-                        "이미지 폴링 성공",
-                        data
-                ));
-    }
+
 }
 
