@@ -1,10 +1,6 @@
 package hwalibo.toilet.service.s3;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+
 import hwalibo.toilet.utils.S3KeyUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,22 +8,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3UploadService {
-    private final AmazonS3 amazonS3;
+    private final S3Client s3Client;
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
+
+    @Value("${spring.cloud.aws.region.static}")
+    private String region;
 
     public List<String> uploadAll(List<MultipartFile> files,String dirName) {
         List<String> urls = new ArrayList<>(files.size());
@@ -37,18 +39,26 @@ public class S3UploadService {
                 String key = dirName + "/" + UUID.randomUUID() + getExt(f.getOriginalFilename());
                 uploadedKeys.add(key);
                 //메타 데이터 세팅
-                ObjectMetadata meta = new ObjectMetadata();
-                meta.setContentLength(f.getSize());
-                meta.setContentType(f.getContentType());
+                Map<String, String> metadata = new HashMap<>();
+                metadata.put("Content-Type", f.getContentType());
+
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .contentType(f.getContentType())
+                        .metadata(metadata)
+                        .build();
 
                 //S3 업로드
-                try (InputStream is = f.getInputStream()) {
-                    PutObjectRequest req = new PutObjectRequest(bucket, key, is, meta);
-                            //.withCannedAcl(CannedAccessControlList.PublicRead);
-                    amazonS3.putObject(req);
-                }
-                urls.add(amazonS3.getUrl(bucket, key).toString());
+                s3Client.putObject(
+                        putObjectRequest,
+                        RequestBody.fromInputStream(f.getInputStream(), f.getSize())
+                );
 
+                //URL 생성
+                String url = "https;//" + bucket + ".s3." +
+                        region + ".amazonaws.com/" + key;
+                urls.add(url);
             }
             return urls;
         }catch(IOException e) {
@@ -56,7 +66,7 @@ public class S3UploadService {
             log.error("파일 입출력 에러 발생: {}", e.getMessage(), e);
             rollbackUpload(uploadedKeys);
             throw new UncheckedIOException("파일 스트림 처리 중 오류 발생", e);
-        }catch(AmazonS3Exception e) {
+        }catch(S3Exception e) {
             //S3 접속 권한 관련 에러
             log.error("S3 업로드 중 에러 발생:{} ", e.getMessage(), e);
             rollbackUpload(uploadedKeys);
@@ -70,7 +80,10 @@ public class S3UploadService {
         log.warn("---S3 업로드 실패로 인한 롤백 시작. {}개 파일 삭제--",KeysToRollback.size());
         for(String key:KeysToRollback){
             try {
-                amazonS3.deleteObject(bucket, key);
+                DeleteObjectRequest deleteObjectRequest=DeleteObjectRequest.builder()
+                                .bucket(bucket).key(key).build();
+
+                s3Client.deleteObject(deleteObjectRequest);
                 log.info("롤백 완료:{}", key);
             }catch(Exception rollbackException){
                 log.error("롤백 실패:{}",key,rollbackException);
@@ -88,7 +101,10 @@ public class S3UploadService {
     public void delete(String fileUrl){
         try{
             String key= S3KeyUtils.toKey(bucket,fileUrl);
-            amazonS3.deleteObject(bucket,key);
+            DeleteObjectRequest deleteObjectRequest=DeleteObjectRequest.builder()
+                            .bucket(bucket).key(key).build();
+
+            s3Client.deleteObject(deleteObjectRequest);
             log.info("S3 삭제 완료:{}",key);
         }catch(Exception e){
             log.error("S3 삭제 실패:{}",fileUrl,e);

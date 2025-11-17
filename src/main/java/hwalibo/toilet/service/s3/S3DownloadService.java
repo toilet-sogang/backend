@@ -1,13 +1,14 @@
 package hwalibo.toilet.service.s3;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.openai.models.responses.ResponseCodeInterpreterCallCodeDeltaEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -16,9 +17,9 @@ import java.net.URL;
 @Service
 @RequiredArgsConstructor
 public class S3DownloadService {
-    private final AmazonS3 amazonS3;
+    private final S3Client s3Client;
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
 /**
@@ -26,19 +27,18 @@ public class S3DownloadService {
  * GptValidationService에서 AI 검증을 위해 사용됩니다.
  * */
 
-    public byte[] getBytes(String fileUrl) throws IOException, AmazonS3Exception{
+    public byte[] getBytes(String fileUrl) throws IOException, S3Exception{
         String key=getKeyFromUrl(fileUrl);
 
         try{
+            GetObjectRequest getObjectRequest= GetObjectRequest.builder()
+            .bucket(bucket).key(key).build();
+
             //S3에서 객체 가져오기
-            S3Object s3Object=amazonS3.getObject(bucket,key);
-            //InputStream을 byte[]로 변환
-            //try-with-resources를 사용해 스트림 자동 닫기
-            try(S3ObjectInputStream inputStream=s3Object.getObjectContent()){
-                byte[] bytes=inputStream.readAllBytes();
-                return bytes;
+            try(ResponseInputStream<GetObjectResponse> inputStream=s3Client.getObject(getObjectRequest)) {
+                return inputStream.readAllBytes();
             }
-        }catch (AmazonS3Exception e){
+        }catch (S3Exception e){
             throw e;
         }catch (IOException e){
             throw new UncheckedIOException("S3 파일 스트림을 읽는 중 오류 발생",e);
@@ -58,5 +58,6 @@ public class S3DownloadService {
             throw new IllegalArgumentException("S3 URL 형식이 잘못되었습니다",e);
         }
     }
+
 
 }

@@ -41,5 +41,5 @@ out/
 
 .jwt_secret
 
-# Google Cloud Service Account Key
-*.json
+# Google Cloud Key - 절대로 커밋 금지
+hwalibo-995529f0307e.json

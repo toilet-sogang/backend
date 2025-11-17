@@ -51,7 +51,8 @@ public class User implements UserDetails {
     private double rate; // 사용자 순위
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
-    private Integer numReview; // 리뷰 개수
+    @Builder.Default
+    private Integer numReview=0; // 리뷰 개수
 
     // 네이버 'profile_image' URL 하나를 저장할 필드
     private String profile;
@@ -77,6 +78,7 @@ public class User implements UserDetails {
 
     //유저의 리뷰 개수 추가
     public void addReview() {
+        if(numReview==null) numReview=0;
         this.numReview++;
     }
 
