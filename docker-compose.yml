@@ -1,45 +1,50 @@
 services:
   app:
-    build: .
+    image: ${DOCKER_IMAGE}:${VERSION}
     container_name: hwalibo-app
+
+    ports:
+      - "8080:8080"
+
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "8080:8080"              # 외부로 노출되는 건 앱만
+
     environment:
+      # --- Spring Profile ---
       - SPRING_PROFILES_ACTIVE=prod
-      # === DB / Redis (내부 네트워크 호스트네임 사용) ===
+
+      # --- DB ---
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/toiletsystem?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_DATA_REDIS_HOST=${REDIS_HOST}
-      - SPRING_DATA_REDIS_PORT=${REDIS_PORT}
 
-      # === JWT / OAuth2 ===
+      # --- Redis ---
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+      # --- JWT / OAuth ---
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ACCESS_VALIDITY=${JWT_ACCESS_VALIDITY}
       - JWT_REFRESH_VALIDITY=${JWT_REFRESH_VALIDITY}
       - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
-      # - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}  # prod 고정이면 생략
 
-      # === 기타 ===
+      # --- 기타 ---
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TZ=Asia/Seoul
 
-      # === AWS (가능하면 EC2 Role 권장) ===
+      # --- AWS ---
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
 
-      # === Google Cloud 인증 ===
+      # --- Google Vision ---
       - GOOGLE_APPLICATION_CREDENTIALS=/app/config/service-account.json
 
     volumes:
-      # CI/CD에서 만든 ./service-account.json을 컨테이너 내부로 마운트
       - ./service-account.json:/app/config/service-account.json:ro
 
     restart: unless-stopped
@@ -47,38 +52,42 @@ services:
   db:
     image: mysql:8.0.43
     container_name: hwalibo-db
+
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: toiletsystem
       TZ: Asia/Seoul
+
     command: >
       --default-authentication-plugin=caching_sha2_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_0900_ai_ci
+
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD}" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 60
       start_period: 40s
+
     volumes:
       - db-data:/var/lib/mysql
-    # ⚠️ 외부 포트 공개 금지 (내부 네트워크로만 접근)
-    # ports: ["3306:3306"]
+
     restart: unless-stopped
 
   redis:
     image: redis:7.2.5-alpine
     container_name: hwalibo-redis
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 10s
       retries: 10
+
     volumes:
       - redis-data:/data
-    # ⚠️ 외부 포트 공개 금지
-    # ports: ["6379:6379"]
+
     restart: unless-stopped
 
 volumes:
