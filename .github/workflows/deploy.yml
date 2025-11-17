@@ -89,7 +89,7 @@ jobs:
 
             # -------- docker-compose.yml 자동 생성 --------
             cat <<'EOF' > docker-compose.yml
-            (여기에 앞에서 준 docker-compose.yml 내용 그대로 들어감)
+            # (여기에 앞에서 준 docker-compose.yml 내용 그대로 들어감)
             EOF
 
             # ENV 적용
