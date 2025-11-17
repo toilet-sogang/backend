@@ -56,7 +56,7 @@ public class S3UploadService {
                 );
 
                 //URL 생성
-                String url = "https;//" + bucket + ".s3." +
+                String url = "https://" + bucket + ".s3." +
                         region + ".amazonaws.com/" + key;
                 urls.add(url);
             }
@@ -81,7 +81,7 @@ public class S3UploadService {
         for(String key:KeysToRollback){
             try {
                 DeleteObjectRequest deleteObjectRequest=DeleteObjectRequest.builder()
-                                .bucket(bucket).key(key).build();
+                        .bucket(bucket).key(key).build();
 
                 s3Client.deleteObject(deleteObjectRequest);
                 log.info("롤백 완료:{}", key);
@@ -102,7 +102,7 @@ public class S3UploadService {
         try{
             String key= S3KeyUtils.toKey(bucket,fileUrl);
             DeleteObjectRequest deleteObjectRequest=DeleteObjectRequest.builder()
-                            .bucket(bucket).key(key).build();
+                    .bucket(bucket).key(key).build();
 
             s3Client.deleteObject(deleteObjectRequest);
             log.info("S3 삭제 완료:{}",key);

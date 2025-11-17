@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -101,14 +103,20 @@ public class ReviewPostService {
         List<ReviewImage> savedImages = reviewImageRepository.saveAll(newImages);
 
         //저장된 이미지들을 비동기 검증 서비스에 전달
-        for(int i=0;i<savedImages.size();i++){
-            ReviewImage savedImage=savedImages.get(i);
-            try {
-                googleVisionValidationService.validateImage(savedImage.getId(), savedImage.getUrl());
-            }catch(Exception e){
-                throw new RuntimeException("비동기 호출에서 예외 발생");
+        // [수정된 부분] 트랜잭션 커밋이 완료된 "후"에 비동기 작업을 실행함
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                for (ReviewImage savedImage : savedImages) {
+                    try {
+                        googleVisionValidationService.validateImage(savedImage.getId(), savedImage.getUrl());
+                    } catch (Exception e) {
+                        log.error("비동기 검수 호출 중 에러: {}", savedImage.getId(), e);
+                    }
+                }
             }
-        }
+        });
+
         return PhotoUploadResponse.of(savedImages);
     }
 
