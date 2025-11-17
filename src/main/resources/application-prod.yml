@@ -99,3 +99,7 @@ app:
 feature:
   vision:
     enabled: true
+
+google:
+  credentials:
+    path: /app/config/service-account.json

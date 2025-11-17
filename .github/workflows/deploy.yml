@@ -93,6 +93,9 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
             echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> .env
+            echo "DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}" >> .env
+            echo "VERSION=${{ needs.build.outputs.version }}" >> .env
+            
             # (선택) GOOGLE_APPLICATION_CREDENTIALS 값도 .env에 남기고 싶다면:
             echo "GOOGLE_APPLICATION_CREDENTIALS=/app/config/service-account.json" >> .env
 
