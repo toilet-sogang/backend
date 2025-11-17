@@ -26,5 +26,5 @@ public class GoogleVisionProdConfig {
     @Bean
     public ImageAnnotatorClient imageAnnotatorClient() throws IOException {
         return ImageAnnotatorClient.create();
-        }
     }
+}
