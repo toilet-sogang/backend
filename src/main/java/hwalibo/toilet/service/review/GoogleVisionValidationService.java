@@ -7,45 +7,62 @@ import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.service.s3.S3DownloadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleVisionValidationService {
 
     private final ReviewImageRepository reviewImageRepository;
     private final S3DownloadService s3DownloadService;
     private final ImageAnnotatorClient imageAnnotatorClient;
 
-    /**
-     * 화장실 이미지 검수 - Google Vision 사용 (비동기)
-     */
+    // 리사이징 기준 크기 (640px이면 분석에 충분)
+    private static final int TARGET_SIZE = 640;
 
     @Async
     @Transactional
     public void validateImage(Long reviewImageId, String imageUrl) {
-
-        String validationResult = "VALIDATION_ERROR";
-
         try {
-            // 1. S3에서 이미지 바이트 가져오기 (기존 코드와 동일하게)
-            byte[] imageBytes = s3DownloadService.getBytes(imageUrl);
+            // 1. S3 다운로드
+            byte[] originalBytes = s3DownloadService.getBytes(imageUrl);
 
-            // 2. Google Vision으로 분석
-            validationResult = validateWithGoogleVision(imageBytes);
+            // 2. [최적화] Thumbnailator로 리사이징 (이미지 크기 대폭 축소)
+            byte[] resizedBytes = resizeImage(originalBytes);
 
-            // 3. DB 상태 업데이트
-            updateImageStatus(reviewImageId, validationResult);
+            // 3. Vision API 분석
+            String result = validateWithGoogleVision(resizedBytes);
+
+            // 4. 결과 저장
+            updateImageStatus(reviewImageId, result);
 
         } catch (Exception e) {
-            // 로그 찍고 예외 처리
-            throw new RuntimeException("이미지 검수 Google Vision AI 사용에 오류가 생겼습니다", e);
+            log.error("Vision API 검수 실패 : {}", reviewImageId, e);
         }
+    }
+
+    /**
+     * Thumbnailator를 사용한 간결한 리사이징
+     */
+    private byte[] resizeImage(byte[] originalBytes) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Thumbnails.of(new ByteArrayInputStream(originalBytes))
+                .size(TARGET_SIZE, TARGET_SIZE) // 가로세로 중 큰 쪽을 640px로 맞춤 (비율 유지)
+                .outputFormat("jpg")            // 용량이 적은 jpg로 변환
+                .toOutputStream(baos);
+
+        return baos.toByteArray();
     }
 
     /**
