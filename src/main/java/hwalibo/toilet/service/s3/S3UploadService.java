@@ -56,7 +56,7 @@ public class S3UploadService {
                 );
 
                 //URL 생성
-                String url = "https;//" + bucket + ".s3." +
+                String url = "https://" + bucket + ".s3." +
                         region + ".amazonaws.com/" + key;
                 urls.add(url);
             }
