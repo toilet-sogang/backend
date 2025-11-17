@@ -14,6 +14,7 @@ import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.user.UserRepository;
+import hwalibo.toilet.service.review.GoogleVisionValidationService;
 import hwalibo.toilet.service.s3.S3UploadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
@@ -36,6 +39,7 @@ public class UserService {
     private final S3UploadService s3UploadService;
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final GoogleVisionValidationService googleVisionValidationService;
 
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
@@ -157,18 +161,29 @@ public class UserService {
                     .build());
         }
 
-        // 5. [새 이미지 저장]
         if (!imagesToSave.isEmpty()) {
 
-            // 5-1. (핵심) '수정 가능한' 리스트에 새 이미지를 추가합니다.
-            // 'cascade=ALL'이 100% 인지하고 DB에 'INSERT'를 예약합니다.
+            // 5-1. 컬렉션에 추가 (Cascade 저장 예약)
             review.getReviewImages().addAll(imagesToSave);
 
-            // 5-2. (🚨삭제 필수🚨)
-            // 충돌을 일으키는 수동 saveAll()은 반드시 없어야 합니다.
-            // reviewImageRepository.saveAll(imagesToSave); // 👈 삭제 확인!
+            // 5-2. ✨ [추가된 부분] 트랜잭션 커밋 후 비동기 검수 실행
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    // 커밋이 완료되면 imagesToSave의 객체들에 ID가 생성되어 있습니다.
+                    for (ReviewImage image : imagesToSave) {
+                        try {
+                            if (image.getId() != null) {
+                                googleVisionValidationService.validateImage(image.getId(), image.getUrl());
+                            }
+                        } catch (Exception e) {
+                            log.error("이미지 수정 비동기 검수 호출 실패: ID={}, URL={}", image.getId(), image.getUrl(), e);
+                        }
+                    }
+                }
+            });
 
-            log.info("새 이미지 저장 성공 (컬렉션에 추가 완료)");
+            log.info("새 이미지 저장 예약 및 비동기 검수 등록 완료");
         }
 
         Review updatedReview = reviewRepository.findByIdWithImages(reviewId)
