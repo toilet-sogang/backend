@@ -40,5 +40,9 @@ public class ReviewImage {
     public void approve() {
         this.status = ValidationStatus.APPROVED;
     }
+
+    public void reject(){
+        this.status=ValidationStatus.REJECTED;
+    }
 }
 

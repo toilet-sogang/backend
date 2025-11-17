@@ -233,6 +233,8 @@ public class GoogleVisionValidationService {
         // "VALID" 인 경우 승인, 그 외에는 거부 (필요하면 거부사유 저장 컬럼 추가)
         if (validationResult != null && "VALID".equalsIgnoreCase(validationResult.trim())) {
             image.approve();
+        }else{
+            image.reject();
         }
 
         reviewImageRepository.save(image);
