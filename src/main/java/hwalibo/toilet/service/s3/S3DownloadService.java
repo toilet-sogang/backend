@@ -22,17 +22,17 @@ public class S3DownloadService {
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
-/**
- * S3 URL에서 이미지를 다운로드하여 byte[]로 반환합니다.
- * GptValidationService에서 AI 검증을 위해 사용됩니다.
- * */
+    /**
+     * S3 URL에서 이미지를 다운로드하여 byte[]로 반환합니다.
+     * GptValidationService에서 AI 검증을 위해 사용됩니다.
+     * */
 
     public byte[] getBytes(String fileUrl) throws IOException, S3Exception{
         String key=getKeyFromUrl(fileUrl);
 
         try{
             GetObjectRequest getObjectRequest= GetObjectRequest.builder()
-            .bucket(bucket).key(key).build();
+                    .bucket(bucket).key(key).build();
 
             //S3에서 객체 가져오기
             try(ResponseInputStream<GetObjectResponse> inputStream=s3Client.getObject(getObjectRequest)) {
