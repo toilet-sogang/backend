@@ -61,7 +61,7 @@ public class GoogleVisionValidationService {
             // [로그 수정] e 변수를 마지막 인자로 넘겨야 스택 트레이스가 올바르게 로깅됩니다.
             log.error("❌ [VISION_FAIL] Vision API 검수 전체 과정 실패. ID: {}", reviewImageId, e);
 
-            // (★중요) 비동기 실패 시, DB 상태를 'REJECTED' 또는 'ERROR'로 업데이트하는 로직
+            // (★중요) 비동기 실패 시, DB 상태를 'REJECTED' 또는 'ERROR'로 업데이트
             try {
                 log.warn("⚠️ [VISION_FAIL_UPDATE] 검증 실패로 DB 상태를 REJECTED로 변경 시도. ID: {}", reviewImageId);
                 updateImageStatus(reviewImageId, "REJECTED"); // 또는 "ERROR" 상태
