@@ -33,21 +33,41 @@ public class GoogleVisionValidationService {
     @Async
     @Transactional
     public void validateImage(Long reviewImageId, String imageUrl) {
+        // [로그 추가] 비동기 작업 시작과 ID 기록
+        log.info("✅ [VISION_START] 이미지 검증 비동기 작업 시작. ID: {}", reviewImageId);
+
         try {
             // 1. S3 다운로드
+            log.info("➡️ [VISION_STEP_1] S3 다운로드 시도... ID: {}", reviewImageId);
             byte[] originalBytes = s3DownloadService.getBytes(imageUrl);
 
-            // 2. [최적화] Thumbnailator로 리사이징 (이미지 크기 대폭 축소)
+            // 2. [최적화] Thumbnailator로 리사이징
+            log.info("➡️ [VISION_STEP_2] 이미지 리사이징 시도... ID: {}", reviewImageId);
             byte[] resizedBytes = resizeImage(originalBytes);
+            log.info("➡️ [VISION_STEP_2] 리사이징 완료. ID: {} (Original: {} bytes -> Resized: {} bytes)",
+                    reviewImageId, originalBytes.length, resizedBytes.length);
 
             // 3. Vision API 분석
-            String result = validateWithGoogleVision(resizedBytes);
+            log.info("➡️ [VISION_STEP_3] Google Vision API 호출 시도... ID: {}", reviewImageId);
+            String result = validateWithGoogleVision(resizedBytes); // result가 "APPROVED" 또는 "REJECTED"라고 가정
+            log.info("➡️ [VISION_STEP_3] Google Vision API 응답 수신. ID: {}, Result: {}", reviewImageId, result);
 
             // 4. 결과 저장
+            log.info("➡️ [VISION_STEP_4] DB 상태 업데이트 시도... ID: {}", reviewImageId);
             updateImageStatus(reviewImageId, result);
+            log.info("✅ [VISION_SUCCESS] 이미지 검증 및 DB 업데이트 완료. ID: {}", reviewImageId);
 
         } catch (Exception e) {
-            log.error("Vision API 검수 실패 : {}", reviewImageId, e);
+            // [로그 수정] e 변수를 마지막 인자로 넘겨야 스택 트레이스가 올바르게 로깅됩니다.
+            log.error("❌ [VISION_FAIL] Vision API 검수 전체 과정 실패. ID: {}", reviewImageId, e);
+
+            // (★중요) 비동기 실패 시, DB 상태를 'REJECTED' 또는 'ERROR'로 업데이트하는 로직
+            try {
+                log.warn("⚠️ [VISION_FAIL_UPDATE] 검증 실패로 DB 상태를 REJECTED로 변경 시도. ID: {}", reviewImageId);
+                updateImageStatus(reviewImageId, "REJECTED"); // 또는 "ERROR" 상태
+            } catch (Exception updateException) {
+                log.error("❌ [VISION_PANIC] 실패 상태 DB 업데이트조차 실패함. ID: {}", reviewImageId, updateException);
+            }
         }
     }
 
