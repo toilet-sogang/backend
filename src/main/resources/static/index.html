@@ -35,7 +35,7 @@
         .info     { background-color: #555; }
         .gpt      { background-color: #8E44AD; }
 
-        /* [! 1. 추가 !] 회원탈퇴용 Danger 버튼 */
+        /* 회원탈퇴용 Danger 버튼 */
         .danger   { background-color: #E74C3C; }
 
         #loading { display:none; font-size:14px; color:#555; }
@@ -57,7 +57,7 @@
           line-height: 1.6;
         }
 
-        /* [! 2. 추가 !] 커스텀 확인 모달 CSS */
+        /* 커스텀 확인 모달 CSS */
         .modal-overlay {
             display: none; /* 기본 숨김 */
             position: fixed;
@@ -92,6 +92,7 @@
 <h1>OAuth2 로그인 테스트 (Naver)</h1>
 
 <div>
+    <!-- (백엔드 서버 주소)/oauth2/authorization/naver -->
     <a href="/oauth2/authorization/naver"><button class="btn naver">Naver 로그인</button></a>
 </div>
 
@@ -102,7 +103,7 @@
     <button class="btn action" onclick="logout()">🚪 로그아웃</button>
 </div>
 
-<!-- [! 3. 추가 !] 회원탈퇴 버튼 섹션 -->
+<!-- 회원탈퇴 버튼 섹션 -->
 <div style="margin-top: 15px;">
     <button class="btn danger" onclick="confirmWithdraw()">🔥 회원 탈퇴 (계정 삭제)</button>
 </div>
@@ -124,7 +125,7 @@
 <div class="status" id="status"></div>
 <pre id="result">API 응답 결과가 여기에 표시됩니다.</pre>
 
-<!-- [! 4. 추가 !] 커스텀 확인 모달 HTML -->
+<!-- 커스텀 확인 모달 HTML -->
 <div id="confirmModal" class="modal-overlay">
     <div class="modal-content">
         <h2 id="modalTitle">확인</h2>
@@ -168,7 +169,7 @@
       }
     }
 
-    // === [! 5. 추가 !] 모달 제어 함수 ===
+    // === 모달 제어 함수 ===
     function showModal(title, message, onConfirm) {
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalMessage').innerText = message;
@@ -181,7 +182,7 @@
         onConfirmCallback = null;
     }
 
-    // === [! 6. 수정 !] 토큰 재발급 (alert -> resultEl) ===
+    // === 토큰 재발급 ===
     async function reissueToken() {
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
@@ -213,7 +214,7 @@
       }
     }
 
-    // === [! 7. 수정 !] 로그아웃 (alert -> resultEl) ===
+    // === 로그아웃 ===
     async function logout() {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) {
@@ -244,7 +245,7 @@
       }
     }
 
-    // === [! 8. 추가 !] 회원 탈퇴 확인창 띄우기 ===
+    // === 회원 탈퇴 (1/2): 확인창 띄우기 ===
     function confirmWithdraw() {
         const token = localStorage.getItem('accessToken');
         if (!token) {
@@ -260,7 +261,7 @@
         );
     }
 
-    // === [! 9. 추가 !] 실제 회원 탈퇴 API 호출 ===
+    // === 회원 탈퇴 (2/2): 실제 API 호출 ===
     async function withdrawUser() {
         const token = localStorage.getItem('accessToken');
         if (!token) return; // (confirmWithdraw에서 이미 체크함)
@@ -276,7 +277,8 @@
             // 204 No Content (성공)
             if (res.status === 204) {
                 localStorage.clear();
-                resultEl.innerText = '✅ 회원 탈퇴가 성공적으로 처리되었습니다.';
+                // [! 요청하신 성공 메시지 !]
+                resultEl.innerText = '✅ 회원 탈퇴가 성공적으로 완료되었습니다!';
                 showStatus();
             } else {
                 // 4xx, 5xx 에러 (JSON 응답이 있을 경우)
@@ -290,7 +292,7 @@
     }
 
 
-    // === 내 정보 조회 (기존과 동일) ===
+    // === 내 정보 조회 ===
     async function fetchUserInfo() {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -305,7 +307,7 @@
       resultEl.innerText = JSON.stringify(data, null, 2);
     }
 
-    // === 닉네임 변경 (기존과 동일) ===
+    // === 닉네임 변경 ===
     async function updateUserName() {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -328,7 +330,7 @@
       resultEl.innerText = JSON.stringify(data, null, 2);
     }
 
-    // === 리뷰 요약 (기존과 동일) ===
+    // === 리뷰 요약 ===
     async function summarizeToilet1() {
       const token = localStorage.getItem('accessToken');
       if (!token) {
