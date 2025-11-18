@@ -104,6 +104,18 @@ public class User implements UserDetails {
         if(numReview==null) numReview=0;
         this.numReview++;
     }
+    // 탈퇴한 유저 재활성화 메서드
+    public void reActivate() {
+        this.status = UserStatus.ACTIVE;
+        this.deletedAt = null;
+    }
+
+    // OAuth 프로필 이미지 업데이트 메서드
+    public void updateProfileImage(String profileImageUrl) {
+        this.profile = profileImageUrl;
+    }
+
+
 
     // ========= UserDetails 인터페이스 구현  ========== //
 
