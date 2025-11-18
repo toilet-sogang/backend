@@ -97,8 +97,8 @@ public class AuthService {
         }
     }
 
-    //회원탈퇴
-    public void withdraw(User loginUser) {
+    //회원탈퇴 ( 유저, 리뷰, 이미지 모두 삭제 버전)
+    /*public void withdraw(User loginUser) {
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
@@ -151,6 +151,32 @@ public class AuthService {
         userRepository.delete(user);
 
         log.info("DB에서 유저(ID: {}) Soft Delete 처리 완료.", user.getId());
+    }*/
+
+    //회원탈퇴 (리뷰/이미지 모두 보존, 삭제된 사용자는 탈퇴한 사용자로!)
+    public void withdraw(User loginUser) {
+
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(UserNotFoundException::new);
+
+        // 0. 네이버 연동 해제
+        try {
+            naverAuthService.revokeNaverToken(user.getNaverRefreshToken());
+        } catch (Exception e) {
+            log.error("네이버 연동 해제 실패", e);
+        }
+
+        // 1. 리뷰/이미지 삭제 안 함
+        // 2. S3 삭제 안 함
+        // 3. 작성자 정보만 "탈퇴한 사용자"로 가리기 (선택)
+        user.updateName("탈퇴한 사용자");
+        user.updateProfileImage(null);
+
+        // 4. Soft delete 적용
+        userRepository.delete(user);
+
+        log.info("User {} soft deleted (리뷰/이미지는 유지됨)", user.getId());
     }
+
 
 }
