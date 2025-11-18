@@ -96,7 +96,7 @@ public class User implements UserDetails {
         this.refreshToken = refreshToken;
     }
 
-    // [6. 추가] 네이버 Refresh Token 업데이트 메서드
+    // 네이버 Refresh Token 업데이트 메서드
     public void updateNaverRefreshToken(String naverRefreshToken) {
         this.naverRefreshToken = naverRefreshToken;
     }
