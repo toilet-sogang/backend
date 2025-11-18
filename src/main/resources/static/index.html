@@ -274,10 +274,11 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
 
-            // 204 No Content (성공)
-            if (res.status === 204) {
+            // [! 1. ★★★ 이 부분이 수정된 핵심입니다 ★★★ !]
+            // 204(No Content)와 200(OK)을 모두 성공으로 처리
+            if (res.ok) {
                 localStorage.clear();
-                // [! 요청하신 성공 메시지 !]
+                // [! 2. 요청하신 성공 메시지 !]
                 resultEl.innerText = '✅ 회원 탈퇴가 성공적으로 완료되었습니다!';
                 showStatus();
             } else {
