@@ -21,7 +21,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     //닉네임 중복 여부 확인
     boolean existsByName(String name);
 
-    // @Where(status = 'ACTIVE')를 무시하고 DELETED 상태의 유저도 찾기 위한 쿼리
-    @Query("SELECT u FROM User u WHERE u.provider = :provider AND u.providerId = :providerId")
-    Optional<User> findUserByProviderAndProviderId_IgnoreStatus(@Param("provider") String provider, @Param("providerId") String providerId);
+
+    @Query(
+            value = "SELECT * FROM users WHERE provider = :provider AND provider_id = :providerId LIMIT 1",
+            nativeQuery = true
+    )
+    Optional<User> findUserEvenIfDeleted(@Param("provider") String provider, @Param("providerId") String providerId);
+
 }

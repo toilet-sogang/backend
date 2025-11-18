@@ -38,24 +38,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String provider = oAuth2UserInfo.getProvider();
         String providerId = oAuth2UserInfo.getProviderId();
 
-        User user = userRepository.findUserByProviderAndProviderId_IgnoreStatus(provider, providerId)
+        User user = userRepository.findUserEvenIfDeleted(provider, providerId)
                 .map(existingUser -> {
-                    // [ 4. 기존 유저 발견 (ACTIVE 또는 DELETED) ]
 
-                    // (A) 만약 DELETED 상태라면 -> "재활성화" 메서드 호출
+                    // DELETED → reActivate
                     if (existingUser.getStatus() == UserStatus.DELETED) {
-                        // [! 1. 수정 !] setStatus, setDeletedAt 대신 reActivate() 호출
                         existingUser.reActivate();
                     }
 
-                    // (B) 공통: 네이버에서 받은 최신 정보(이름, 프로필)로 업데이트
+                    // 최신 정보 업데이트
                     existingUser.updateName(oAuth2UserInfo.getName());
-                    // [! 2. 수정 !] setProfile 대신 updateProfileImage() 호출
                     existingUser.updateProfileImage(oAuth2UserInfo.getProfileImageUrl());
 
                     return userRepository.save(existingUser);
                 })
-                // [ 5. 신규 유저 ]
                 .orElseGet(() -> saveNewUser(oAuth2UserInfo));
 
         return new CustomOAuth2User(user, oAuth2UserInfo.getAttributes());
