@@ -64,6 +64,7 @@ public class User implements UserDetails {
     // 네이버 'profile_image' URL 하나를 저장할 필드
     private String profile;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
