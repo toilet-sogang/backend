@@ -23,7 +23,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "users")
+@Table(
+        name="users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"provider", "providerId"})
+        }
+)
+
 // [1. 추가] delete 쿼리를 이 UPDATE 쿼리로 대체
 @SQLDelete(sql = "UPDATE users SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 // [2. 추가] 모든 find 쿼리에 'status = 'ACTIVE'' 조건을 자동 추가
@@ -34,11 +40,11 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String username; // "provider_providerId" 형식의 고유 식별자
 
     // 네이버 'nickname'을 저장할 필드
-    @Column(unique = true)
+    @Column
     private String name;
 
     // 네이버 'gender'를 저장할 필드
