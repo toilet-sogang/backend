@@ -76,7 +76,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         /*String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", appRefreshToken) // 우리 앱 토큰 전달
-                .build().toUriString();/*
+                .build().toUriString();*/
 
         //개발용: '/auth/callback.html' 경로는 주석 처리합니다.
         String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
