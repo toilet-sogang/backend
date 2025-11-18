@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,26 +34,36 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
             throws IOException {
 
-        // 1. 인증 정보에서 CustomOAuth2User 객체를 가져오기
+        // 1. 인증 정보에서 CustomOAuth2User 객체를 가져오기 (변경 없음)
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-        User user = oAuth2User.getUser(); // CustomOAuth2User로부터 User 엔티티를 가져오기
+        User user = oAuth2User.getUser();
 
-        // 2. Access Token과 Refresh Token을 생성
+        // 2. (우리 앱의) Access Token과 Refresh Token을 생성
         String accessToken = jwtTokenProvider.createAccessToken(authentication);
-        String refreshToken = jwtTokenProvider.createRefreshToken();
+        // [! 2. 변수명 수정 !] (혼동 방지)
+        String appRefreshToken = jwtTokenProvider.createRefreshToken();
 
         log.info("로그인에 성공했습니다. Access Token 발급 완료.");
 
-        // 3. 생성된 Refresh Token을 User 엔티티에 저장
-        user.updateRefreshToken(refreshToken);
+        // [! 3. ★★★ 핵심 수정 ★★★ !]
+        // 네이버가 발급한 '진짜' Refresh Token을 'authentication' 객체에서 추출
+        OAuth2LoginAuthenticationToken oauthToken = (OAuth2LoginAuthenticationToken) authentication;
+        String naverRefreshToken = oauthToken.getRefreshToken().getTokenValue();
+
+        // (우리 앱의) Refresh Token과 (네이버의) Refresh Token을 User 엔티티에 모두 저장
+        user.updateRefreshToken(appRefreshToken);       // 우리 앱 JWT
+        user.updateNaverRefreshToken(naverRefreshToken); // 네이버 OAuth2 토큰
         userRepository.save(user);
 
-        log.info("User repository에 Refresh Token 저장 완료");
+        log.info("User repository에 (앱/네이버) Refresh Token 저장 완료");
+        // [! 3. ★★★ 수정 끝 ★★★ !]
+
 
         // 4. 프론트엔드로 리다이렉트할 URL을 동적으로 생성
         String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                 .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
+                // [! 4. 수정 !] (우리 앱의 리프레시 토큰을 전달)
+                .queryParam("refreshToken", appRefreshToken)
                 .build().toUriString();
 
         //개발용: 주석 풀기
@@ -63,7 +74,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("Redirecting to: {}", targetUrl);
 
-        // 5. 생성된 URL로 사용자를 리다이렉트
+        // 5. 생성된 URL로 사용자를 리다이렉트 (변경 없음)
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

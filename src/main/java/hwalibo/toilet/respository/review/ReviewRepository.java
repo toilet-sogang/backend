@@ -29,6 +29,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT r FROM Review r LEFT JOIN FETCH r.reviewImages WHERE r.id = :reviewId")
     Optional<Review> findByIdWithImages(@Param("reviewId") Long reviewId);
 
+
+
     /**
      * 1. 최신순 (기본값)
      * (N+1 해결을 위해 User와 ReviewImages를 한 번에 Join Fetch)

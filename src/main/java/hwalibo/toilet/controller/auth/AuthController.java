@@ -95,4 +95,39 @@ public class AuthController {
                 .body(new ApiResponse<>(true, HttpStatus.NO_CONTENT.value(), "성공적으로 로그아웃되었습니다.", null));
     }
 
+    @Operation(
+            summary = "회원 탈퇴 (계정 삭제)",
+            description = "현재 로그인된 사용자의 계정을 탈퇴 처리합니다. S3 이미지, 리뷰, 네이버 연동이 모두 삭제됩니다.",
+            security = { @SecurityRequirement(name = "bearerAuth") } // 🔒 Swagger에서 JWT 인증 필요
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "204", // 204 No Content
+                    description = "회원 탈퇴 성공",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Access Token이 유효하지 않아 인증 실패",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "탈퇴할 사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))
+            )
+    })
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<ApiResponse<Void>> withdrawUser(
+            @AuthenticationPrincipal User loginUser
+    ) {
+        // ✅ 회원 탈퇴 처리
+        authService.withdraw(loginUser);
+
+        // ✅ 204 No Content 반환
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(new ApiResponse<>(true, HttpStatus.NO_CONTENT.value(), "성공적으로 회원 탈퇴되었습니다.", null));
+    }
+
 }

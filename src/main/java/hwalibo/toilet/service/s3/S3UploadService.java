@@ -110,4 +110,24 @@ public class S3UploadService {
             log.error("S3 삭제 실패:{}",fileUrl,e);
         }
     }
+
+    /**
+     * S3에서 여러 개의 파일을 한 번에 삭제
+     * (AuthService의 withdraw 메서드에서 사용)
+     * @param imageUrls 삭제할 파일들의 전체 URL 리스트
+     */
+    public void deleteAll(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+
+        log.info("--- S3 일괄 삭제 시작. 총 {}개 파일 ---", imageUrls.size());
+
+        // 2. 기존의 단건 삭제 메서드를 반복 호출
+        for (String url : imageUrls) {
+            this.delete(url);
+        }
+
+        log.info("--- S3 일괄 삭제 완료 ---");
+    }
 }

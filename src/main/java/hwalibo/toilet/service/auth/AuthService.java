@@ -1,12 +1,18 @@
 package hwalibo.toilet.service.auth;
 
 import hwalibo.toilet.auth.jwt.JwtTokenProvider;
+import hwalibo.toilet.domain.review.Review;
+import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.auth.response.TokenResponse;
+import hwalibo.toilet.exception.user.UserNotFoundException;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
 import hwalibo.toilet.exception.auth.TokenNotFoundException;
 import hwalibo.toilet.exception.auth.UnauthorizedException;
+import hwalibo.toilet.respository.review.ReviewImageRepository;
+import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.user.UserRepository;
+import hwalibo.toilet.service.s3.S3UploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -25,6 +33,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+
+    private final S3UploadService s3UploadService;
+    private final ReviewRepository reviewRepository;
+    private final ReviewImageRepository reviewImageRepository;
+    private final NaverAuthService naverAuthService;
 
     //토큰 재발급
     public TokenResponse reissueTokens(String accessToken, String refreshToken) {
@@ -58,6 +71,7 @@ public class AuthService {
         return TokenResponse.of(newAccessToken, newRefreshToken);
     }
 
+    //로그아웃
     public void logout(User user, String accessToken) {
         if (user == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
@@ -81,5 +95,57 @@ public class AuthService {
         } else {
             log.warn("이미 만료된 AccessToken에 대한 로그아웃 요청입니다: {}", accessToken);
         }
+    }
+
+    //회원탈퇴
+    public void withdraw(User loginUser) {
+        if (loginUser == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+
+        // @Where(clause = "status = 'ACTIVE'")가 적용되어, 탈퇴하지 않은 유저만 조회됨
+        User user = userRepository.findById(loginUser.getId())
+                .orElseThrow(UserNotFoundException::new);
+
+        // 1. 유저가 작성한 모든 '리뷰'와 '이미지'를 조회 (ReviewRepository의 @Query 메서드)
+        List<Review> reviews = reviewRepository.findAllByUser(user);
+
+        // 2. 삭제할 'ReviewImage' 엔티티 리스트와 'S3 URL' 리스트를 분리
+        List<ReviewImage> allImagesToDelete = reviews.stream()
+                .flatMap(review -> review.getReviewImages().stream())
+                .collect(Collectors.toList());
+
+        List<String> imageUrlsToDelete = allImagesToDelete.stream()
+                .map(ReviewImage::getUrl)
+                .collect(Collectors.toList());
+
+        // 3. (S3) S3에서 모든 이미지 파일 '먼저' 삭제
+        if (!imageUrlsToDelete.isEmpty()) {
+            s3UploadService.deleteAll(imageUrlsToDelete);
+            log.info("S3에서 유저(ID: {})의 이미지 {}개 삭제 완료.", user.getId(), imageUrlsToDelete.size());
+        }
+
+        // 4. (DB) 'ReviewImage' 레코드(자식) '먼저' 삭제
+        if (!allImagesToDelete.isEmpty()) {
+            reviewImageRepository.deleteAll(allImagesToDelete);
+            log.info("DB에서 유저(ID: {})의 ReviewImage {}개 삭제 완료.", user.getId(), allImagesToDelete.size());
+        }
+
+        // 5. (DB) 'Review' 레코드(부모) 삭제
+        if (!reviews.isEmpty()) {
+            reviewRepository.deleteAll(reviews);
+            log.info("DB에서 유저(ID: {})의 Review {}개 삭제 완료.", user.getId(), reviews.size());
+        }
+
+        // 6. 네이버 연동 해제 API 호출
+        try {
+            naverAuthService.revokeNaverToken(user.getNaverRefreshToken());
+        } catch (Exception e) {
+            log.error("네이버 연동 해제 실패 (유저 ID: {}). DB 탈퇴 처리는 계속 진행합니다.", user.getId(), e);
+        }
+
+        // 7. (DB) 유저 Soft Delete (@SQLDelete가 실행됨)
+        userRepository.delete(user);
+        log.info("DB에서 유저(ID: {}) Soft Delete 처리 완료.", user.getId());
     }
 }
