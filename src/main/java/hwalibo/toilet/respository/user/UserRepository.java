@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     //리뷰 개수 비교
     long countByNumReviewGreaterThan(Integer numReview);
 
-   //닉네임 중복 여부 확인
+    //닉네임 중복 여부 확인
     boolean existsByName(String name);
 
     // @Where(status = 'ACTIVE')를 무시하고 DELETED 상태의 유저도 찾기 위한 쿼리
