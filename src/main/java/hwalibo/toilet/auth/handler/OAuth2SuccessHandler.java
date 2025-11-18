@@ -28,9 +28,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
-
-    // [! 2. 의존성 주입 추가 !]
-    // (이 의존성을 추가하기 위해 @RequiredArgsConstructor가 클래스에 있는지 확인하세요)
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     @Value("${app.oauth2.redirect-uri}")
@@ -51,9 +48,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("로그인에 성공했습니다. Access Token 발급 완료.");
 
-        // [! 3. ★★★ 핵심 수정 (에러 해결) ★★★ !]
-        // (에러가 났던) OAuth2LoginAuthenticationToken으로 캐스팅하는 대신,
-        // OAuth2AuthenticationToken (부모 클래스)으로 캐스팅합니다. (이건 안전함)
+        // 3. OAuth2AuthenticationToken (부모 클래스)으로 캐스팅합니다. (이건 안전함)
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
 
         // 클라이언트 ID ("naver")와 Principal 이름(user.getUsername())을 가져옵니다.
@@ -76,10 +71,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         userRepository.save(user);
 
         log.info("User repository에 (앱/네이버) Refresh Token 저장 완료");
-        // [! 3. ★★★ 수정 끝 ★★★ !]
 
-
-        // [! 4. ★★★ 리디렉션 URI 수정 ★★★ !]
         // 프론트엔드 URI의 주석을 해제합니다.
         /*String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                 .queryParam("accessToken", accessToken)
@@ -87,17 +79,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .build().toUriString();*/
 
         //개발용: '/auth/callback.html' 경로는 주석 처리합니다.
-
         String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", appRefreshToken)
                 .build().toUriString();
 
-        // [! 4. ★★★ 수정 끝 ★★★ !]
-
         log.info("Redirecting to: {}", targetUrl);
 
-        // 5. 생성된 URL로 사용자를 리다이렉트 (변경 없음)
+        // 생성된 URL로 사용자를 리다이렉트
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }

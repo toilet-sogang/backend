@@ -124,7 +124,21 @@
 
 <div class="status" id="status"></div>
 <pre id="result">API 응답 결과가 여기에 표시됩니다.</pre>
-
+<!-- 회원탈퇴 성공 메시지 박스 -->
+<div id="withdrawSuccess"
+     style="
+        display:none;
+        margin-top:20px;
+        padding:18px;
+        background:#e8f8f0;
+        color:#2c7a4b;
+        border:1px solid #b6e2c3;
+        border-radius:8px;
+        font-size:16px;
+        font-weight:600;
+     ">
+    ✅ 회원탈퇴가 성공적으로 완료되었습니다.
+</div>
 <!-- 커스텀 확인 모달 HTML -->
 <div id="confirmModal" class="modal-overlay">
     <div class="modal-content">
@@ -263,34 +277,35 @@
 
     // === 회원 탈퇴 (2/2): 실제 API 호출 ===
     async function withdrawUser() {
-        const token = localStorage.getItem('accessToken');
-        if (!token) return; // (confirmWithdraw에서 이미 체크함)
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
 
-        resultEl.innerText = '🔥 회원 탈퇴 요청 중... (모든 데이터를 삭제합니다)';
+    resultEl.innerText = '🔥 회원 탈퇴 요청 중... (모든 데이터를 삭제합니다)';
 
-        try {
-            const res = await fetch('/auth/withdraw', {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+    try {
+        const res = await fetch('/auth/withdraw', {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
 
-            // [! 1. ★★★ 이 부분이 수정된 핵심입니다 ★★★ !]
-            // 204(No Content)와 200(OK)을 모두 성공으로 처리
-            if (res.ok) {
-                localStorage.clear();
-                // [! 2. 요청하신 성공 메시지 !]
-                resultEl.innerText = '✅ 회원 탈퇴가 성공적으로 완료되었습니다!';
-                showStatus();
-            } else {
-                // 4xx, 5xx 에러 (JSON 응답이 있을 경우)
-                const data = await res.json();
-                resultEl.innerText = `🔥 회원 탈퇴 실패 (Code: ${res.status}):\n${JSON.stringify(data, null, 2)}`;
-            }
-        } catch (err) {
-            console.error(err);
-            resultEl.innerText = '🔥 회원 탈퇴 중 치명적인 오류 발생:\n' + err.message;
+        if (res.ok) {
+            localStorage.clear();
+
+            // ✅ 기존 resultEl 표시 + 성공 박스 표시
+            resultEl.innerText = '';
+            document.getElementById('withdrawSuccess').style.display = 'block';
+
+            showStatus();
+        } else {
+            const data = await res.json();
+            resultEl.innerText = `🔥 회원 탈퇴 실패 (Code: ${res.status}):\n${JSON.stringify(data, null, 2)}`;
         }
+    } catch (err) {
+        console.error(err);
+        resultEl.innerText = '🔥 회원 탈퇴 중 치명적인 오류 발생:\n' + err.message;
     }
+}
+
 
 
     // === 내 정보 조회 ===

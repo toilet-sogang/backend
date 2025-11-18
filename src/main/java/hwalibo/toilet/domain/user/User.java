@@ -29,10 +29,7 @@ import java.util.List;
                 @UniqueConstraint(columnNames = {"provider", "providerId"})
         }
 )
-
-// [1. 추가] delete 쿼리를 이 UPDATE 쿼리로 대체
 @SQLDelete(sql = "UPDATE users SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-// [2. 추가] 모든 find 쿼리에 'status = 'ACTIVE'' 조건을 자동 추가
 @Where(clause = "status = 'ACTIVE'")
 public class User implements UserDetails {
 
@@ -75,13 +72,12 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
-    // [4. 추가] 탈퇴 일시
+    // 탈퇴 일시
     private LocalDateTime deletedAt;
 
-    // [5. 추가] 네이버의 Refresh Token을 저장할 별도 필드
+    // 네이버의 Refresh Token을 저장할 별도 필드
     @Column(length = 1024) // 네이버 리프레시 토큰은 길 수 있으므로 넉넉하게
     private String naverRefreshToken;
-
 
     // 이름 업데이트 메서드
     public void updateName(String newName) {
@@ -105,11 +101,12 @@ public class User implements UserDetails {
         this.naverRefreshToken = naverRefreshToken;
     }
 
-    //유저의 리뷰 개수 추가
+    //유저의 리뷰 개수
     public void addReview() {
         if(numReview==null) numReview=0;
         this.numReview++;
     }
+
     // 탈퇴한 유저 재활성화 메서드
     public void reActivate() {
         this.status = UserStatus.ACTIVE;
@@ -120,8 +117,6 @@ public class User implements UserDetails {
     public void updateProfileImage(String profileImageUrl) {
         this.profile = profileImageUrl;
     }
-
-
 
     // ========= UserDetails 인터페이스 구현  ========== //
 
@@ -152,7 +147,6 @@ public class User implements UserDetails {
         return true;
     }
 
-    // [7. 수정] UserDetails의 isEnabled()가 status를 반영하도록 수정
     @Override
     public boolean isEnabled() {
         return this.status == UserStatus.ACTIVE;
