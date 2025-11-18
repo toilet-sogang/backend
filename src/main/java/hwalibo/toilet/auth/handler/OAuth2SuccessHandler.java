@@ -73,16 +73,16 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         log.info("User repository에 (앱/네이버) Refresh Token 저장 완료");
 
         // 프론트엔드 URI의 주석을 해제합니다.
-        String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+        /*String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", appRefreshToken) // 우리 앱 토큰 전달
-                .build().toUriString();
+                .build().toUriString();/*
 
         //개발용: '/auth/callback.html' 경로는 주석 처리합니다.
-        /*String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
+        String targetUrl = UriComponentsBuilder.fromPath("/auth/callback.html")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", appRefreshToken)
-                .build().toUriString();*/
+                .build().toUriString();
 
         log.info("Redirecting to: {}", targetUrl);
 
