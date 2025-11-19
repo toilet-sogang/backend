@@ -110,7 +110,7 @@ public class AuthService {
         // 3. Soft delete 수행
         userRepository.delete(user);
 
-        // 4. Access Token 블랙리스트 등록 (즉시 차단)
+        // 4. Access Token 블랙리스트 등록
         if (accessToken != null) {
             registerBlacklist(accessToken, "withdraw-keep-reviews");
         }
