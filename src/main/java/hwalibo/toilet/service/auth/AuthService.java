@@ -107,9 +107,6 @@ public class AuthService {
         user.updateName("탈퇴한 사용자");
         user.updateProfileImage(null);
 
-        // 3. 변경사항 강제 반영 (Update 쿼리 실행)
-        //userRepository.saveAndFlush(user);
-
         // 3. Soft delete 수행
         userRepository.delete(user);
 

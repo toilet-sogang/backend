@@ -48,7 +48,7 @@ public class NaverAuthService {
             body.add("grant_type", "delete");
             body.add("client_id", naverClientId);
             body.add("client_secret", naverClientSecret);
-            body.add("token", newAccessToken);
+            body.add("access_token", newAccessToken);
 
             String response = webClient.post()
                     .uri(NAVER_TOKEN_PATH)
