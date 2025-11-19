@@ -108,12 +108,12 @@ public class AuthService {
         user.updateProfileImage(null);
 
         // 3. 변경사항 강제 반영 (Update 쿼리 실행)
-        userRepository.saveAndFlush(user);
+        //userRepository.saveAndFlush(user);
 
-        // 4. Soft delete 수행
+        // 3. Soft delete 수행
         userRepository.delete(user);
 
-        // 5. Access Token 블랙리스트 등록 (즉시 차단)
+        // 4. Access Token 블랙리스트 등록 (즉시 차단)
         if (accessToken != null) {
             registerBlacklist(accessToken, "withdraw-keep-reviews");
         }
