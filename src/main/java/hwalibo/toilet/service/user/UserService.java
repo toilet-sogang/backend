@@ -21,6 +21,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -44,15 +45,11 @@ public class UserService {
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
     public UserResponse getUserInfo(User loginUser) {
-
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
-
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
-
-        // [수정] 순위 계산 및 응답 객체 생성을 buildUserResponseWithRate에 위임
         return buildUserResponseWithRate(user);
     }
 
@@ -61,28 +58,23 @@ public class UserService {
         if (loginUser == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
-
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
-
         String newName = request.getName();
         String currentName = user.getName();
-
-        // 1. 현재 닉네임과 동일한지 *먼저* 검사
+        // 1. 현재 닉네임과 동일한지 검사
         if (newName.equals(currentName)) {
             throw new IdenticalNameException("현재 닉네임과 동일한 닉네임입니다.");
         }
-
         // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
         if (userRepository.existsByName(newName)) {
             throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
         }
-
         // 3. 모든 검사를 통과하면 이름 업데이트
         user.updateName(newName);
-
         return buildUserResponseWithRate(user);
     }
+
     @Transactional
     public ReviewPhotoUpdateResponse updateImage(User loginUser, Long reviewId, ReviewPhotoUpdateRequest request, List<MultipartFile> newImages) {
         if (loginUser == null) {
@@ -184,22 +176,16 @@ public class UserService {
 
     }
 
+    @Cacheable(value = "userRank", key = "#user.id")
+    private int calculateUserRate(User user) {
+        log.info("⚠️ Cache Miss: 순위 계산을 위해 DB 쿼리 실행. User ID: {}", user.getId());
+        int rate = userRepository.findCalculatedRateByUserId(user.getId())
+                .orElse(100);
+        return rate;
+    }
+
     private UserResponse buildUserResponseWithRate(User user) {
-        // 1. 전체 유저 수
-        long totalUsers = userRepository.count();
-
-        // 2. 나보다 리뷰 수가 많은 유저 수
-        long higherRank = userRepository.countByNumReviewGreaterThan(
-                user.getNumReview() != null ? user.getNumReview() : 0
-        );
-
-        // (totalUsers - higherRank) = 나보다 적거나 같은 유저 수
-        // 리뷰 수가 많을수록 100%에 가까워집니다.
-        int rate = totalUsers > 0
-                ? (int) Math.ceil((totalUsers - higherRank) * 100.0 / totalUsers)
-                : 100;
-
-        // 최종 응답 객체 생성
+        int rate = calculateUserRate(user);
         return UserResponse.from(user, rate);
     }
 }

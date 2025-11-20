@@ -17,6 +17,7 @@ import hwalibo.toilet.service.s3.S3UploadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -38,6 +39,7 @@ public class ReviewPostService {
     private final ToiletRepository toiletRepository;
     private final GoogleVisionValidationService googleVisionValidationService;
 
+    @CacheEvict(value = "userRank", key = "#loginUser.id")
     @Transactional
     public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request, Long toiletId) {
 

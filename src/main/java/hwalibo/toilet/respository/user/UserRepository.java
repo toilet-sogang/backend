@@ -16,7 +16,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByRefreshToken(String refreshToken);
 
     //리뷰 개수 비교
-    long countByNumReviewGreaterThan(Integer numReview);
+    @Query(value = """
+        SELECT
+            CEIL(
+                (1 - PERCENT_RANK() OVER (ORDER BY u.num_review ASC)) * 100
+            ) AS rate
+        FROM
+            users u
+        WHERE
+            u.id = :userId
+            AND u.status = 'ACTIVE'
+    """, nativeQuery = true)
+    Optional<Integer> findCalculatedRateByUserId(@Param("userId") Long userId);
 
     //닉네임 중복 여부 확인
     boolean existsByName(String name);
