@@ -14,7 +14,7 @@ public class UserRankService {
 
     private final UserRepository userRepository;
 
-    @Cacheable(value = "userRank", key="#userId.toString()")
+    @Cacheable(value = "userRank", key= "#userId")
     public int calculateUserRate(Long userId) {
         log.info("⚠️ Cache Miss: DB 쿼리 실행. User ID={}", userId);
         return userRepository.findCalculatedRateByUserId(userId)
