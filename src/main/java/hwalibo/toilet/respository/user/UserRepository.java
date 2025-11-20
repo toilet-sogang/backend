@@ -17,16 +17,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //리뷰 개수 비교
     @Query(value = """
+    SELECT calculated_rank.rate
+    FROM (
+        -- 1. 전체 활성 사용자를 대상으로 순위 계산을 먼저 수행합니다.
         SELECT
+            u.id,
             CEIL(
-                (1 - PERCENT_RANK() OVER (ORDER BY u.num_review ASC)) * 100
+                PERCENT_RANK() OVER (ORDER BY u.num_review DESC) * 100
             ) AS rate
         FROM
             users u
         WHERE
-            u.id = :userId
-            AND u.status = 'ACTIVE'
-    """, nativeQuery = true)
+            u.status = 'ACTIVE' 
+    ) AS calculated_rank
+    WHERE
+        calculated_rank.id = :userId
+""", nativeQuery = true)
     Optional<Integer> findCalculatedRateByUserId(@Param("userId") Long userId);
 
     //닉네임 중복 여부 확인
