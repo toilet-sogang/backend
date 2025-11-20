@@ -39,7 +39,7 @@ public class ReviewPostService {
     private final ToiletRepository toiletRepository;
     private final GoogleVisionValidationService googleVisionValidationService;
 
-    @CacheEvict(value = "userRank", key = "#loginUser.id")
+    @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
     public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request, Long toiletId) {
 

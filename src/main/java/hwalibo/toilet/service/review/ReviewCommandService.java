@@ -6,6 +6,7 @@ import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.dto.review.request.ReviewUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ public class ReviewCommandService {
 
     private final ReviewRepository reviewRepository;
 
+    @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
     public void deleteMyReview(User loginUser, Long reviewId) {
         if (loginUser == null) {
@@ -31,6 +33,7 @@ public class ReviewCommandService {
         reviewRepository.delete(review);
     }
 
+    @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
     public Long updateMyReview(User loginUser, Long reviewId, ReviewUpdateRequest request) {
         if (loginUser == null) {
