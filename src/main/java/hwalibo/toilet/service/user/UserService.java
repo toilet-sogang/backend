@@ -52,20 +52,8 @@ public class UserService {
         User user = userRepository.findById(loginUser.getId())
                 .orElseThrow(UserNotFoundException::new);
 
-        // 전체 유저 수
-        long totalUsers = userRepository.count();
-
-        // 나보다 리뷰 수가 많은 유저 수
-        long higherRank = userRepository.countByNumReviewGreaterThan(
-                user.getNumReview() != null ? user.getNumReview() : 0
-        );
-
-        // 상위 퍼센트 (정수)
-        int rate = totalUsers > 0
-                ? (int) Math.ceil(higherRank * 100.0 / totalUsers)
-                : 100;
-
-        return UserResponse.from(user, rate);
+        // [수정] 순위 계산 및 응답 객체 생성을 buildUserResponseWithRate에 위임
+        return buildUserResponseWithRate(user);
     }
 
     @Transactional
@@ -197,20 +185,21 @@ public class UserService {
     }
 
     private UserResponse buildUserResponseWithRate(User user) {
-        // 전체 유저 수
+        // 1. 전체 유저 수
         long totalUsers = userRepository.count();
 
-        // 나보다 리뷰 수가 많은 유저 수
+        // 2. 나보다 리뷰 수가 많은 유저 수
         long higherRank = userRepository.countByNumReviewGreaterThan(
                 user.getNumReview() != null ? user.getNumReview() : 0
         );
 
-        // 상위 퍼센트 (정수)
+        // (totalUsers - higherRank) = 나보다 적거나 같은 유저 수
+        // 리뷰 수가 많을수록 100%에 가까워집니다.
         int rate = totalUsers > 0
-                ? (int) Math.ceil(higherRank * 100.0 / totalUsers)
+                ? (int) Math.ceil((totalUsers - higherRank) * 100.0 / totalUsers)
                 : 100;
 
-        // (이전에 수정한) id가 포함된 UserResponse.from 호출
+        // 최종 응답 객체 생성
         return UserResponse.from(user, rate);
     }
 }
