@@ -176,7 +176,7 @@ public class UserService {
 
     }
 
-    @Cacheable(value = "userRank", key = "#userId")
+    @Cacheable(value = "userRank", key = "#userId.toString()")
     private int calculateUserRate(Long userId) {
         log.info("⚠️ Cache Miss: 순위 계산을 위해 DB 쿼리 실행. User ID: {}", userId);
 
