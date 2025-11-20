@@ -176,14 +176,12 @@ public class UserService {
 
     }
 
-    @Cacheable(value = "userRank", key = "#userId.toString()")
-    private int calculateUserRate(Long userId) {
-        log.info("⚠️ Cache Miss: 순위 계산을 위해 DB 쿼리 실행. User ID: {}", userId);
+    @Cacheable(value = "userRank", key = "#userId")
+    public int calculateUserRate(Long userId) {
+        log.info("⚠️ Cache Miss: DB 쿼리 실행. User ID: {}", userId);
 
-        // findCalculatedRateByUserId의 쿼리도 userId를 받도록 이미 되어 있음
-        int rate = userRepository.findCalculatedRateByUserId(userId)
+        return userRepository.findCalculatedRateByUserId(userId)
                 .orElse(100);
-        return rate;
     }
 
     private UserResponse buildUserResponseWithRate(User user) {
