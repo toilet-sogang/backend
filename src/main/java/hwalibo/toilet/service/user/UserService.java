@@ -41,6 +41,7 @@ public class UserService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final GoogleVisionValidationService googleVisionValidationService;
+    private final UserRankService userRankService;
 
     // 로그인된 유저 정보 조회
     @Transactional(readOnly = true)
@@ -176,16 +177,8 @@ public class UserService {
 
     }
 
-    @Cacheable(value = "userRank", key = "#userId")
-    public int calculateUserRate(Long userId) {
-        log.info("⚠️ Cache Miss: DB 쿼리 실행. User ID: {}", userId);
-
-        return userRepository.findCalculatedRateByUserId(userId)
-                .orElse(100);
-    }
-
     private UserResponse buildUserResponseWithRate(User user) {
-        int rate = calculateUserRate(user.getId());
+        int rate = userRankService.calculateUserRate(user.getId());  // ✔ 프록시 통해 호출됨 → 캐싱됨
         return UserResponse.from(user, rate);
     }
 }
