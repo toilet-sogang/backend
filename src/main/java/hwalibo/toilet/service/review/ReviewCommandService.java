@@ -5,6 +5,7 @@ import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.dto.review.request.ReviewUpdateRequest;
+import hwalibo.toilet.service.user.UserRankService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewCommandService {
 
     private final ReviewRepository reviewRepository;
+    private final UserRankService userRankService;
 
-    @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
     public void deleteMyReview(User loginUser, Long reviewId) {
         if (loginUser == null) {
@@ -31,9 +32,9 @@ public class ReviewCommandService {
         }
 
         reviewRepository.delete(review);
+        userRankService.evictUserRate(loginUser.getId());
     }
 
-    @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
     public Long updateMyReview(User loginUser, Long reviewId, ReviewUpdateRequest request) {
         if (loginUser == null) {
@@ -72,6 +73,7 @@ public class ReviewCommandService {
         } catch (Exception e) {
             throw new IllegalArgumentException("업데이트 실패: " + e.getMessage());
         }
+        userRankService.evictUserRate(loginUser.getId());
         return review.getId();
     }
 }

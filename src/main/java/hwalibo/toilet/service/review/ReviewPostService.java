@@ -14,6 +14,7 @@ import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.respository.user.UserRepository;
 import hwalibo.toilet.service.review.GoogleVisionValidationService;
 import hwalibo.toilet.service.s3.S3UploadService;
+import hwalibo.toilet.service.user.UserRankService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class ReviewPostService {
     private final S3UploadService s3UploadService;
     private final ToiletRepository toiletRepository;
     private final GoogleVisionValidationService googleVisionValidationService;
+    private final UserRankService userRankService;
 
     @CacheEvict(value = "userRank", key="#loginUser.id.toString()")
     @Transactional
@@ -65,6 +67,8 @@ public class ReviewPostService {
         // 6. toilet의 Reviewstats 최신화 (OK)
         // 'toilet'도 '영속 상태'이므로 변경 감지(Dirty Checking)가 동작합니다.
         toilet.updateReviewStats(review.getStar());
+
+        userRankService.evictUserRate(loginUser.getId());
 
         // 7. 응답 반환 (OK)
         return ReviewCreateResponse.of(review);

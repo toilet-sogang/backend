@@ -3,6 +3,7 @@ package hwalibo.toilet.service.user;
 import hwalibo.toilet.respository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -18,5 +19,10 @@ public class UserRankService {
         log.info("⚠️ Cache Miss: DB 쿼리 실행. User ID={}", userId);
         return userRepository.findCalculatedRateByUserId(userId)
                 .orElse(100);
+    }
+
+    @CacheEvict(value = "userRank", key = "#userId")
+    public void evictUserRate(Long userId) {
+        log.info("🗑 Rank Cache Evicted! userId={}", userId);
     }
 }
