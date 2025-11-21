@@ -11,8 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:5173", // 로컬 프론트엔드 (Vite)
-                        "https://frontendproj-git-main-choiys-projects.vercel.app", // Vercel 배포 주소
+                        "https://frontendproj-three.vercel.app", // Vercel 배포 주소
                         "https://hwalibo-backend.duckdns.org"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
