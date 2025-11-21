@@ -2,6 +2,7 @@ package hwalibo.toilet.service.user;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.type.ValidationStatus;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.review.photo.request.ReviewPhotoUpdateRequest;
 import hwalibo.toilet.dto.review.photo.response.ReviewPhotoUpdateResponse;
@@ -117,7 +118,8 @@ public class UserService {
         }
 
         // 4. [추가 로직] (변경 없음)
-        int currentImageCount = review.getReviewImages().size();
+        long currentImageCount = review.getReviewImages().stream()
+                .filter(image->image.getStatus()== ValidationStatus.APPROVED).count();
         int newImageCount = (newImages != null) ? newImages.size() : 0;
 
         if (currentImageCount + newImageCount > 2) {

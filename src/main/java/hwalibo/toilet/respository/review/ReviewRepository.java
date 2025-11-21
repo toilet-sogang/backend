@@ -17,7 +17,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT DISTINCT r FROM Review r " +
             "LEFT JOIN FETCH r.reviewImages ri " +
-            "WHERE r.user = :user ")
+            "WHERE r.user = :user " +
+            "AND ri.status='APPROVED'" ) //APPROVED 상태만 필터링
     List<Review> findAllByUser(@Param("user") User user);
 
 

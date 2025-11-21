@@ -102,4 +102,4 @@ feature:
 
 google:
   credentials:
-    path: /app/config/service-account.json
+    path:  /app/config/service-account.json

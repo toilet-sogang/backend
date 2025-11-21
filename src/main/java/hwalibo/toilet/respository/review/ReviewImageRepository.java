@@ -24,7 +24,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN ri.review r " + // Review(r)를 JOIN
             "WHERE r.toilet.id = :toiletId " + // review.toilet.id로 조건 변경
-            "AND ri.status='APPROVED'"+ //APPROVED 상태만 필터링
+            "AND ri.status='APPROVED'" + //APPROVED 상태만 필터링
             "ORDER BY r.createdAt DESC, ri.id DESC") // 1. 정렬 기준 변경 (r.createdAt)
     @EntityGraph(attributePaths = {"review", "review.toilet"})
     Slice<ReviewImage> findFirstPageByToiletId(
@@ -38,7 +38,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN ri.review r " + // Review(r)를 JOIN
             "WHERE r.toilet.id = :toiletId " + // review.toilet.id로 조건 변경
-            "AND ri.status='APPROVED'"+
+            "AND ri.status='APPROVED'" +
             "AND (" + // 2. 복합 키 WHERE 절
             "   r.createdAt < :lastCreatedAt OR " + // 1순위: review.createdAt 비교
             "   (r.createdAt = :lastCreatedAt AND ri.id < :lastId)" + // 2순위: reviewImage.id 비교
@@ -63,7 +63,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "JOIN FETCH r.user u " +
             "LEFT JOIN FETCH r.tag t " +
             "WHERE ri.id = :photoId " +
-            "AND ri.status = 'APPROVED'")
+            "AND ri.status = 'APPROVED'" )
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
 
     List<ReviewImage> findByReviewId(Long reviewId);

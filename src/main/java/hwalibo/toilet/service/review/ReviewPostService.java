@@ -3,6 +3,7 @@ package hwalibo.toilet.service.review;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.toilet.Toilet;
+import hwalibo.toilet.domain.type.ValidationStatus;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.chat.response.ImageStatusResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
@@ -87,6 +88,14 @@ public class ReviewPostService {
         //생성된 리뷰 찾기
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
+
+        long currentApprovedCount = review.getReviewImages().stream()
+                .filter(image -> image.getStatus() == ValidationStatus.APPROVED)
+                .count();
+
+        if (currentApprovedCount + images.size() > 2) {
+            throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
+        }
 
         List<String> uploadedUrls;
         //S3저장(동기식)
