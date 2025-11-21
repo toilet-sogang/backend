@@ -107,6 +107,14 @@ public class User implements UserDetails {
         this.numReview++;
     }
 
+    public void removeReview() {
+        if (numReview == null || numReview <= 0) {
+            this.numReview = 0;
+            return;
+        }
+        this.numReview--;
+    }
+
     // 탈퇴한 유저 재활성화 메서드
     public void reActivate() {
         this.status = UserStatus.ACTIVE;

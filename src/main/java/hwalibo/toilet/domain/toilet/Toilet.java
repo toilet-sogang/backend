@@ -66,4 +66,22 @@ public class Toilet {
         this.star = newAverageStar;
         this.numReview = newNumReview;
     }
+
+    public void removeReviewStats(double removedReviewStar) {
+        double currentStar = (this.star != null) ? this.star : 0.0;
+        int currentNumReview = (this.numReview != null) ? this.numReview : 0;
+
+        if (currentNumReview <= 1) {
+            this.star = 0.0;
+            this.numReview = 0;
+            return;
+        }
+
+        double totalStars = currentStar * currentNumReview;
+        int newNumReview = currentNumReview - 1;
+        double newAverageStar = (totalStars - removedReviewStar) / newNumReview;
+
+        this.star = newAverageStar;
+        this.numReview = newNumReview;
+    }
 }

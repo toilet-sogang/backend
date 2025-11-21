@@ -1,13 +1,13 @@
 package hwalibo.toilet.service.review;
 
 import hwalibo.toilet.domain.review.Review;
+import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.dto.review.request.ReviewUpdateRequest;
 import hwalibo.toilet.service.user.UserRankService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +29,17 @@ public class ReviewCommandService {
 
         if (!review.getUser().getId().equals(loginUser.getId())) {
             throw new SecurityException("본인이 작성한 리뷰만 삭제할 수 있습니다.");
+        }
+
+        User author = review.getUser();
+        Toilet toilet = review.getToilet();
+
+        if (author != null) {
+            author.removeReview();
+        }
+        if (toilet != null) {
+            double star = review.getStar() != null ? review.getStar() : 0.0;
+            toilet.removeReviewStats(star);
         }
 
         reviewRepository.delete(review);
