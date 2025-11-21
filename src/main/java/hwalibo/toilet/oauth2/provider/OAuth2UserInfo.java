@@ -1,5 +1,7 @@
 package hwalibo.toilet.oauth2.provider;
 
+import hwalibo.toilet.domain.type.Gender;
+
 import java.util.Map;
 
 /**
@@ -20,6 +22,9 @@ public interface OAuth2UserInfo {
 
     // 사용자 프로필 이미지 URL 반환
     String getProfileImageUrl();
+
+    //사용자의 성별 정보 반환
+    Gender getGender();
 
     // 사용자 정보가 담긴 원본 Map 데이터 반환
     Map<String, Object> getAttributes();

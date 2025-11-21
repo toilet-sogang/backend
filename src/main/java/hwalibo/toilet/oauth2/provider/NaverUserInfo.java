@@ -1,5 +1,7 @@
 package hwalibo.toilet.oauth2.provider;
 
+import hwalibo.toilet.domain.type.Gender;
+
 import java.util.Map;
 
 public class NaverUserInfo implements OAuth2UserInfo {
@@ -37,6 +39,14 @@ public class NaverUserInfo implements OAuth2UserInfo {
     public String getProfileImageUrl() {
         // 네이버의 프로필 사진 URL은 'profile_image' 필드에 있습니다.
         return (String) attributes.get("profile_image");
+    }
+
+    @Override
+    // ⬅️ 수정: 반환 타입을 Gender Enum으로 변경하고, Naver 코드를 변환하여 반환
+    public Gender getGender() {
+        // Naver API에서 String("M" 또는 "F")으로 받은 후, Gender Enum으로 변환하여 반환합니다.
+        String naverGenderCode = (String) attributes.get("gender");
+        return Gender.fromNaverCode(naverGenderCode);
     }
 
     @Override

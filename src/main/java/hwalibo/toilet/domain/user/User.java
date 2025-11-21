@@ -113,6 +113,11 @@ public class User implements UserDetails {
         this.deletedAt = null;
     }
 
+    // 성별 업데이트 메서드
+    public void updateGender(Gender gender) {
+        this.gender = gender;
+    }
+
     // OAuth 프로필 이미지 업데이트 메서드
     public void updateProfileImage(String profileImageUrl) {
         this.profile = profileImageUrl;

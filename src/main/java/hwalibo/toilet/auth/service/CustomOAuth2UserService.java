@@ -1,6 +1,7 @@
 package hwalibo.toilet.auth.service;
 
 import hwalibo.toilet.auth.CustomOAuth2User;
+import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.UserStatus;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.domain.type.Role;
@@ -37,20 +38,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String provider = oAuth2UserInfo.getProvider();
         String providerId = oAuth2UserInfo.getProviderId();
+        Gender genderEnum = oAuth2UserInfo.getGender();
 
         User user = userRepository.findUserEvenIfDeleted(provider, providerId)
                 .map(existingUser -> {
 
-                    // ⬅️ 탈퇴 상태면 복구
+                    // ⬅️ 탈퇴 상태면 복구 (재가입)
                     if (existingUser.getStatus() == UserStatus.DELETED) {
                         existingUser.reActivate();
-                        existingUser.updateName(oAuth2UserInfo.getName());   // ⬅️ 재가입이므로 이름 초기화 OK
-                        existingUser.updateProfileImage(oAuth2UserInfo.getProfileImageUrl());
+                        existingUser.updateName(oAuth2UserInfo.getName());           // 이름 초기화
+                        existingUser.updateProfileImage(oAuth2UserInfo.getProfileImageUrl()); // 프로필 최신화
+                        existingUser.updateGender(genderEnum);      // 성별 정보 저장/최신화
                     }
                     else {
-                        // ⬅️ 이미 ACTIVE 유저면 이름은 절대 덮어쓰기 금지!!
-                        // existingUser.updateName(oAuth2UserInfo.getName());  ❌ 삭제
-                        existingUser.updateProfileImage(oAuth2UserInfo.getProfileImageUrl()); // 프로필은 최신화 OK
+                        // ⬅️ 이미 ACTIVE 유저
+                        existingUser.updateProfileImage(oAuth2UserInfo.getProfileImageUrl()); // 프로필 최신화
+                        existingUser.updateGender(genderEnum);      // 성별 정보 최신화
                     }
 
                     return userRepository.save(existingUser);
@@ -63,14 +66,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private User saveNewUser(OAuth2UserInfo oAuth2UserInfo) {
         String username = oAuth2UserInfo.getProvider() + "_" + oAuth2UserInfo.getProviderId();
+
+        Gender genderEnum = oAuth2UserInfo.getGender();
+
         User newUser = User.builder()
                 .username(username)
                 .name(oAuth2UserInfo.getName())
                 .profile(oAuth2UserInfo.getProfileImageUrl())
+                .gender(genderEnum)  // ⬅️ 성별 정보 저장
                 .provider(oAuth2UserInfo.getProvider())
                 .providerId(oAuth2UserInfo.getProviderId())
                 .role(Role.ROLE_USER)
-                // status는 User 엔티티의 @Builder.Default에 의해 자동 설정됨
                 .build();
         return userRepository.save(newUser);
     }
