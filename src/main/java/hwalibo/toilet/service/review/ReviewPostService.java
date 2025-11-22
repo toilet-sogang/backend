@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,7 +51,7 @@ public class ReviewPostService {
         Toilet toilet = toiletRepository.findById(toiletId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
-        if(!loginUser.getGender().equals(toilet.getGender())) {
+        if(Objects.equals(loginUser.getGender(), toilet.getGender())) {
             throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
         }
 
@@ -92,7 +93,7 @@ public class ReviewPostService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
 
-        if(!loginUser.getGender().equals( review.getToilet().getGender())) {
+        if(!Objects.equals(loginUser.getGender(), review.getToilet().getGender()))  {
             throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
         }
 

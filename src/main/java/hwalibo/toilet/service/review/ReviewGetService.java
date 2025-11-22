@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -44,7 +45,7 @@ public class ReviewGetService {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
         // 같은 성별인지 여부
-        boolean canViewPhoto = loginUser.getGender().equals(toilet.getGender());
+        boolean canViewPhoto = Objects.equals(loginUser.getGender(), toilet.getGender());
 
         List<Review> reviews;
         switch (sortType) {
