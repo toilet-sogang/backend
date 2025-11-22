@@ -104,7 +104,7 @@ public class ReviewPostService {
         long currentApprovedCount = review.getReviewImages().stream()
                 .filter(image -> image.getStatus() == ValidationStatus.APPROVED)
                 .count();
-/
+
         if (currentApprovedCount + images.size() > 2) {
             throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
         }
