@@ -27,12 +27,16 @@ public class ToiletDetailResponse {
 
     // Entity → DTO 변환
     public static ToiletDetailResponse of(Toilet toilet) {
+        double formattedStar = Double.parseDouble(
+                String.format("%.1f", toilet.getStar())
+        );
+
         return ToiletDetailResponse.builder()
                 .id(toilet.getId())
                 .name(toilet.getName())
                 .line(toilet.getLine())
                 .gender(String.valueOf(toilet.getGender()))
-                .star(toilet.getStar())
+                .star(formattedStar)
                 .numBigToilet(toilet.getNumBigToilet())
                 .numSmallToilet(toilet.getNumSmallToilet())
                 .numGate(toilet.getNumGate())

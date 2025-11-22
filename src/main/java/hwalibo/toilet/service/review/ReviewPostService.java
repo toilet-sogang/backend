@@ -55,6 +55,7 @@ public class ReviewPostService {
             throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
         }
 
+
         // 2. 리뷰 엔티티 생성 (OK)
         // 'review' 엔티티에 'loginUser'를 넣는 것은 FK(user_id)를 설정하기 위함이라 괜찮습니다.
         Review review = request.toEntity(loginUser, toilet);
