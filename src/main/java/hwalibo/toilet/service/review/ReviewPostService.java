@@ -81,24 +81,33 @@ public class ReviewPostService {
     }
 
     @Transactional
-    //이미지 업로드
+//이미지 업로드
     public PhotoUploadResponse uploadImage(User loginUser,Long reviewId, List< MultipartFile > images) {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
 
-        //생성된 리뷰 찾기
+        // 1. 생성된 리뷰 찾기 (Toilet 엔티티를 EAGER 로딩하거나 Lazy 로딩되도록 접근)
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
 
-        if(!Objects.equals(loginUser.getGender(), review.getToilet().getGender()))  {
-            throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
+        // 2. ✨ [핵심 수정] DB에서 최신 유저 정보 조회 (Gender 포함)
+        // loginUser의 ID를 사용하여 DB에서 유저를 조회합니다. 이 객체(managedUser)는 정확한 성별 정보를 가집니다.
+        User managedUser = userRepository.findById(loginUser.getId())
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+
+        // 3. ✨ 성별 일치 여부 확인 (managedUser 사용)
+        // managedUser의 성별이 NULL이 아니며, 리뷰가 달린 화장실 성별과 다를 경우에만 예외 발생
+        if (managedUser.getGender() != null && !Objects.equals(managedUser.getGender(), review.getToilet().getGender()))  {
+            throw new SecurityException("다른 성별의 화장실에는 이미지를 추가할 수 없습니다.");
         }
 
-        //사진이 0개인 경우
+        // 4. 사진이 0개인 경우
         if (images == null || images.isEmpty()) return PhotoUploadResponse.of(List.of());
 
 
+        // 5. 이미지 개수 제한 확인 (기존 로직 유지)
         long currentApprovedCount = review.getReviewImages().stream()
                 .filter(image -> image.getStatus() == ValidationStatus.APPROVED)
                 .count();
@@ -107,11 +116,14 @@ public class ReviewPostService {
             throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
         }
 
+        // 6. S3 저장 및 ReviewImage 변환
         List<String> uploadedUrls;
         //S3저장(동기식)
         uploadedUrls = s3UploadService.uploadAll(images, "reviews");
 
-        int nextOrder = 0;
+        // Review 엔티티의 reviewImages 컬렉션의 size를 기반으로 nextOrder 설정
+        // 기존 approved 이미지 개수를 nextOrder의 시작점으로 사용합니다.
+        int nextOrder = (int) currentApprovedCount;
 
         List<ReviewImage> newImages = new ArrayList<>();
         //ReviewImage로 변환(PENDING 상태)
@@ -123,11 +135,10 @@ public class ReviewPostService {
                     .build());
         }
 
-        //db에 이미지 저장
+        // 7. db에 이미지 저장
         List<ReviewImage> savedImages = reviewImageRepository.saveAll(newImages);
 
-        //저장된 이미지들을 비동기 검증 서비스에 전달
-        // [수정된 부분] 트랜잭션 커밋이 완료된 "후"에 비동기 작업을 실행함
+        // 8. 저장된 이미지들을 비동기 검증 서비스에 전달 (트랜잭션 커밋 후 실행)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
