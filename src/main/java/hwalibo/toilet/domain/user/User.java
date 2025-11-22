@@ -131,6 +131,15 @@ public class User implements UserDetails {
         this.profile = profileImageUrl;
     }
 
+    public void withdrawAndAnonymize() {
+        this.name = "탈퇴한 사용자";
+        this.profile = null;
+        this.status = UserStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
+        this.refreshToken = null;
+        this.naverRefreshToken = null;
+    }
+
     // ========= UserDetails 인터페이스 구현  ========== //
 
     @Override

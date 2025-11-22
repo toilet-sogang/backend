@@ -103,12 +103,12 @@ public class AuthService {
             log.error("네이버 연동 해제 실패 (DB 탈퇴는 진행함)", e);
         }
 
-        // 2. 유저 표시 정보 초기화 (익명화)
-        user.updateName("탈퇴한 사용자");
-        user.updateProfileImage(null);
+        // 2. ✨ [핵심 수정] 익명화 및 Soft delete를 엔티티 내에서 한번에 처리
+        user.withdrawAndAnonymize();
 
-        // 3. Soft delete 수행
-        userRepository.delete(user);
+        // 3. (Optional) 명시적 save: @Transactional에 의해 자동 업데이트되지만,
+        // Soft Delete를 수동으로 처리했으므로 명시적 save를 통해 안전성을 높일 수 있습니다.
+        // userRepository.save(user); // @Transactional이 붙어있으므로 생략 가능
 
         // 4. Access Token 블랙리스트 등록
         if (accessToken != null) {
