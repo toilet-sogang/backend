@@ -1,6 +1,7 @@
 package hwalibo.toilet.auth.jwt;
 
 import hwalibo.toilet.auth.CustomOAuth2User;
+import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.Role;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.exception.auth.InvalidTokenException;
@@ -33,6 +34,8 @@ public class JwtTokenProvider {
     private final long refreshTokenValidityInMilliseconds;
     private final UserRepository userRepository;
 
+    private static final String TOKEN_PREFIX = "Bearer ";
+
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.access-token-validity-in-seconds}") long accessTokenValidity,
@@ -53,15 +56,14 @@ public class JwtTokenProvider {
         String authorities = extractAuthorities(authentication);
         Date validity = calculateTokenValidity(this.accessTokenValidityInMilliseconds);
 
-        // ✅ buildToken에 user.getId()와 user.getUsername()을 명시적으로 전달
-        return buildToken(user.getId().toString(), user.getUsername(), authorities, validity);
+        return buildToken(user.getId().toString(), user.getUsername(), authorities, validity, user.getGender());
     }
 
     // Refresh Token 생성
     public String createRefreshToken() {
         log.info("Creating refresh token");
         Date validity = calculateTokenValidity(this.refreshTokenValidityInMilliseconds);
-        return buildToken(null, null, null, validity);
+        return buildToken(null, null, null, validity, null);
     }
 
     // Authentication 객체 가져오기 (Stateless)
@@ -80,11 +82,16 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
+        String genderStr = claims.get("gender", String.class);
+        Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
+
+
         User principal = User.builder()
                 .id(Long.parseLong(claims.getSubject()))
                 .username(claims.get("username", String.class))
                 .name(claims.get("name", String.class))
                 .role(Role.valueOf((String) authorities.iterator().next().getAuthority()))
+                .gender(gender)
                 .build();
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
@@ -157,7 +164,8 @@ public class JwtTokenProvider {
         return new Date(now + validityInMilliseconds);
     }
 
-    private String buildToken(String userId, String username, String authorities, Date validity) {
+    // ✅ buildToken
+    private String buildToken(String userId, String username, String authorities, Date validity, Gender gender) {
         JwtBuilder builder = Jwts.builder()
                 .signWith(key, SignatureAlgorithm.HS256)
                 .setExpiration(validity);
@@ -173,6 +181,10 @@ public class JwtTokenProvider {
         if (authorities != null) {
             // 'auth' 클레임에 권한 정보 저장
             builder.claim("auth", authorities);
+        }
+        if (gender != null) {
+            // 'gender' 클레임에 성별 정보 저장
+            builder.claim("gender", gender.name());
         }
 
         return builder.compact();
