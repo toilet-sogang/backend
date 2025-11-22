@@ -1,4 +1,3 @@
-/*
 package hwalibo.toilet.init;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.toilet.Toilet;
@@ -197,4 +196,4 @@ public class ReviewDataLoader {
         log.info("➡️ 장애인 화장실 여부(isDis)는 5% 확률로 설정되었습니다.");
         log.info("➡️ 리뷰 작성자의 랭킹 캐시가 모두 무효화되어 다음 API 호출 시 최신 랭킹이 계산됩니다.");
     }
-}*/
+}
