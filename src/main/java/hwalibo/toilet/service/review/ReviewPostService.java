@@ -46,41 +46,38 @@ public class ReviewPostService {
     @Transactional
     public ReviewCreateResponse uploadReview(User loginUser, ReviewCreateRequest request, Long toiletId) {
 
-        // 1. 화장실 엔티티 조회 (OK)
-        // 'toilet'은 findById로 조회했기 때문에 '영속 상태'입니다.
+        // 1. 화장실 엔티티 조회
         Toilet toilet = toiletRepository.findById(toiletId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
-        if(!Objects.equals(loginUser.getGender(), toilet.getGender())) {
-            throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
-        }
-
-
-        // 2. 리뷰 엔티티 생성 (OK)
-        // 'review' 엔티티에 'loginUser'를 넣는 것은 FK(user_id)를 설정하기 위함이라 괜찮습니다.
-        Review review = request.toEntity(loginUser, toilet);
-
-        // 3. 리뷰 저장 (OK)
-        reviewRepository.save(review);
-
-        // 4. ✨ [핵심 수정] DB와 연결된 '영속 상태'의 유저를 다시 불러오기
+        // 2. ✨ [핵심 수정] DB에서 최신 유저 정보 조회 (Gender 포함)
+        // loginUser의 ID를 사용하여 DB에서 유저를 조회합니다. 이 객체(managedUser)는 정확한 성별 정보를 가집니다.
         User managedUser = userRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
-        // 5. '영속 상태' 유저의 리뷰 개수 최신화
-        managedUser.addReview(); // 👈 'loginUser'가 아닌 'managedUser'에 호출해야 합니다.
+        // 3. 성별 일치 여부 확인 (managedUser 사용)
+        // ⭐️ managedUser의 성별이 NULL이 아니며, 화장실 성별과 다를 경우에만 예외 발생
+        if (managedUser.getGender() != null && !Objects.equals(managedUser.getGender(), toilet.getGender())) {
+            throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
+        }
 
-        // 6. toilet의 Reviewstats 최신화 (OK)
-        // 'toilet'도 '영속 상태'이므로 변경 감지(Dirty Checking)가 동작합니다.
+        // 4. 리뷰 엔티티 생성 시 managedUser 사용
+        // FK 설정을 위해 정확한 managedUser 객체를 전달합니다.
+        Review review = request.toEntity(managedUser, toilet);
+
+        // 5. 리뷰 저장
+        reviewRepository.save(review);
+
+        // 6. '영속 상태' 유저의 리뷰 개수 최신화 (managedUser 사용)
+        managedUser.addReview();
+
+        // 7. toilet의 Reviewstats 최신화
         toilet.updateReviewStats(review.getStar());
 
         userRankService.evictUserRate(loginUser.getId());
 
-        // 7. 응답 반환 (OK)
+        // 8. 응답 반환
         return ReviewCreateResponse.of(review);
-
-        // @Transactional이 끝나면, JPA가 'managedUser'와 'toilet'의 변경 사항을
-        // 감지하여 자동으로 UPDATE 쿼리를 실행합니다.
     }
 
     @Transactional
