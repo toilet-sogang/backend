@@ -12,7 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "https://frontendproj-three.vercel.app", // Vercel 배포 주소
-                        "https://hwalibo-backend.duckdns.org"
+                        "https://hwalibo-backend.duckdns.org",
+                        "http://localhost:5173"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*") // 모든 헤더 허용
