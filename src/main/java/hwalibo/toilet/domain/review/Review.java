@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -37,6 +39,7 @@ public class Review {
     // ✨ 다대일(N:1) 관계 설정: Review(N) : User(1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User user;
 
     @Column(columnDefinition = "TEXT") // 더 긴 텍스트를 저장할 수 있도록 TEXT 타입으로 설정
