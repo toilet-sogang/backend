@@ -50,6 +50,10 @@ public class ReviewPostService {
         Toilet toilet = toiletRepository.findById(toiletId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
+        if(!loginUser.getGender().equals(toilet.getGender())) {
+            throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
+        }
+
         // 2. 리뷰 엔티티 생성 (OK)
         // 'review' 엔티티에 'loginUser'를 넣는 것은 FK(user_id)를 설정하기 위함이라 괜찮습니다.
         Review review = request.toEntity(loginUser, toilet);
@@ -83,11 +87,18 @@ public class ReviewPostService {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
-        //사진이 0개인 경우
-        if (images == null || images.isEmpty()) return PhotoUploadResponse.of(List.of());
+
         //생성된 리뷰 찾기
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
+
+        if(!loginUser.getGender().equals( review.getToilet().getGender())) {
+            throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
+        }
+
+        //사진이 0개인 경우
+        if (images == null || images.isEmpty()) return PhotoUploadResponse.of(List.of());
+
 
         long currentApprovedCount = review.getReviewImages().stream()
                 .filter(image -> image.getStatus() == ValidationStatus.APPROVED)

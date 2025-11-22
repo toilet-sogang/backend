@@ -42,7 +42,7 @@ public class ReviewResponse {
     /**
      * Review 엔티티를 DTO로 변환하는 정적 팩토리 메서드
      */
-    public static ReviewResponse from(Review review) {
+    public static ReviewResponse from(Review review,boolean canViewPhoto) {
         // ReviewTag Enum 리스트를 String 리스트로 변환
         List<String> tagNames = review.getTag().stream()
                 .map(Enum::name)
@@ -52,6 +52,10 @@ public class ReviewResponse {
                 .map(ReviewImage::getUrl)
                 .collect(Collectors.toList());
 
+        if (!canViewPhoto) {
+            // 다른 성별이면 사진은 제공하지 않음
+            photoUrl = Collections.emptyList();
+        }
         return ReviewResponse.builder()
                 .id(review.getId())
                 .userId(review.getUser().getId())

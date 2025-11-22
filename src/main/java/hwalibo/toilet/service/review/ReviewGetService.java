@@ -2,6 +2,7 @@ package hwalibo.toilet.service.review;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.type.SortType;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
@@ -10,6 +11,7 @@ import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
+import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.utils.CursorUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ReviewGetService {
+    private final ToiletRepository toiletRepository;
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
 
@@ -36,6 +39,12 @@ public class ReviewGetService {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
+
+        Toilet toilet = toiletRepository.findById(toiletId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
+
+        // 같은 성별인지 여부
+        boolean canViewPhoto = loginUser.getGender().equals(toilet.getGender());
 
         List<Review> reviews;
         switch (sortType) {
@@ -58,7 +67,7 @@ public class ReviewGetService {
 
 
         List<ReviewResponse> responseList = reviews.stream()
-                .map(ReviewResponse::from)
+                .map(review -> ReviewResponse.from(review, canViewPhoto))
                 .collect(Collectors.toList());
 
         return new ReviewListResponse(responseList);
