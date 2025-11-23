@@ -15,10 +15,14 @@ import java.util.Optional;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
 
-    @Query("SELECT DISTINCT r FROM Review r " +
+    @Query("SELECT r FROM Review r " +
             "LEFT JOIN FETCH r.reviewImages ri " +
             "WHERE r.user = :user " +
-            "AND ri.status='APPROVED'" ) //APPROVED 상태만 필터링
+            // [!] r.reviewImages 컬렉션 자체가 비어있거나,
+            //     APPROVED 상태의 이미지가 하나라도 있는 경우를 포함하도록 조건을 변경
+            "AND (ri IS NULL OR ri.status = 'APPROVED')" +
+            "GROUP BY r.id " + // DISTINCT를 대신하여 Group By를 사용하여 중복 리뷰 제거
+            "ORDER BY r.createdAt DESC") // 일반적으로 최신순 정렬//APPROVED 상태만 필터링
     List<Review> findAllByUser(@Param("user") User user);
 
 
