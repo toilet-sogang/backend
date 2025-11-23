@@ -1,6 +1,7 @@
 package hwalibo.toilet.init;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.toilet.Toilet;
+import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.Tag;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.respository.review.ReviewRepository;
@@ -130,68 +131,83 @@ public class ReviewDataLoader {
 
         log.info("⭐ 리뷰 초기화 시작: 총 {}개의 화장실, {}명의 사용자.", toilets.size(), users.size());
 
-        // 모든 화장실에 대해 3개씩 리뷰 작성
         for (Toilet toilet : toilets) {
 
-            for (int i = 0; i < REVIEWS_PER_TOILET; i++) {
-                // 리뷰 작성자 순환 선택
-                User currentUser = users.get(userIndex % users.size());
+            Gender toiletGender = toilet.getGender(); // 🚻 화장실 성별 (Gender enum)
 
-                // 1. 랜덤 템플릿 선택 및 별점 지정
+            int createdForThisToilet = 0; // 이 화장실에 대해 실제 생성된 리뷰 개수
+
+            // 화장실당 최대 REVIEWS_PER_TOILET 개까지 리뷰 생성 시도
+            while (createdForThisToilet < REVIEWS_PER_TOILET) {
+
+                User currentUser = users.get(userIndex % users.size());
+                Gender userGender = currentUser.getGender();  // 👤 유저 성별 (Gender enum)
+
+                // 🔻 성별이 다르면 이 유저는 이 화장실에 대해 리뷰 패스
+                // (예: 화장실 M, 유저 F → 패스)
+                if (userGender != toiletGender) {
+                    userIndex++; // 그냥 다음 유저로 넘기고, 이 화장실에 대해 리뷰 생성 안 함
+
+                    // 혹시라도 모든 유저가 이 화장실 성별과 안 맞아서
+                    // 무한 루프 도는 경우를 대비한 세이프가드
+                    if (userIndex > users.size() * 10) {
+                        log.warn("⚠️ 화장실 {} (gender={}) 에 대해 일치하는 성별 유저를 못 찾았습니다. 스킵합니다.",
+                                toilet.getId(), toiletGender);
+                        break;
+                    }
+                    continue;
+                }
+
+                // ================================
+                // ✅ 여기부터는 성별이 일치하는 경우만
+                // ================================
+
                 ReviewTemplate template = TEMPLATES.get(random.nextInt(TEMPLATES.size()));
                 int starValue = random.nextInt(template.maxStar() - template.minStar() + 1) + template.minStar();
 
-                // 2. 리뷰 내용 및 태그 생성
                 String content = String.format(template.description(), starValue)
                         .replace("[STATION]", toilet.getName());
 
                 List<Tag> tags = new ArrayList<>();
-                // 2-1. 메인 태그 추가 (최소 1개 보장)
+                // 메인 태그
                 tags.add(template.mainTag());
 
-                // 2-2. 추가 랜덤 태그 (0~1개)
+                // 0~1개의 추가 태그
                 if (random.nextDouble() < 0.5) {
                     List<Tag> potentialTags;
-                    // 긍정 리뷰는 긍정 태그 풀에서, 부정 리뷰는 부정 태그 풀에서 선택
                     if (POSITIVE_TAGS.contains(template.mainTag())) {
                         potentialTags = new ArrayList<>(POSITIVE_TAGS);
                     } else {
                         potentialTags = new ArrayList<>(NEGATIVE_TAGS);
                     }
-
                     potentialTags.remove(template.mainTag());
                     Collections.shuffle(potentialTags);
-
                     if (!potentialTags.isEmpty()) {
                         tags.add(potentialTags.get(0));
                     }
                 }
 
-                // 3. 리뷰 객체 생성 및 저장
                 Review review = Review.builder()
                         .star((double) starValue)
                         .description(content)
                         .toilet(toilet)
                         .user(currentUser)
                         .tag(tags)
-                        // ♿ 요청 사항 반영: 장애인 화장실 여부를 5% 확률로 설정 (0.05 미만일 때 true)
                         .isDis(random.nextDouble() < 0.05)
                         .build();
 
                 reviewRepository.save(review);
                 reviewCount++;
+                createdForThisToilet++;   // 이 화장실에서 하나 생성했다고 카운트
 
-                // 4. 통계 및 순위 갱신
-                currentUser.addReview(); // 유저 리뷰 개수 갱신 (User 엔티티 필드)
-                toilet.updateReviewStats((double) starValue); // 화장실 평균 별점/개수 갱신 (Toilet 엔티티 필드)
-
-                // 5. 유저 랭킹 캐시 무효화 (다음 조회 시 최신 순위로 계산됨)
+                currentUser.addReview();
+                toilet.updateReviewStats((double) starValue);
                 userRankService.evictUserRate(currentUser.getId());
 
-                // 6. 다음 사용자로 인덱스 이동
-                userIndex++;
+                userIndex++; // 다음 유저로 이동
             }
         }
+
         log.info("✅ 리뷰 초기화 완료. 총 {}개의 리뷰가 성공적으로 생성되었습니다.", reviewCount);
         log.info("➡️ 장애인 화장실 여부(isDis)는 5% 확률로 설정되었습니다.");
         log.info("➡️ 리뷰 작성자의 랭킹 캐시가 모두 무효화되어 다음 API 호출 시 최신 랭킹이 계산됩니다.");
