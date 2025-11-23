@@ -25,12 +25,6 @@ public class ReviewQueryService {
 
     public MyReviewListResponse getMyReviews(User loginUser) {
         List<Review> reviews = reviewRepository.findAllByUser(loginUser);
-
-        // 최신순 정렬: createdAt DESC, updatedAt DESC
-        reviews.sort(Comparator
-                .comparing(Review::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed()
-                .thenComparing(Review::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
-
         List<MyReviewResponse> items = reviews.stream()
                 .map(r -> new MyReviewResponse(
                         r.getId(),
