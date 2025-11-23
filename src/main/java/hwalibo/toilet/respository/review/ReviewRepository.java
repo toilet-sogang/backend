@@ -14,15 +14,18 @@ import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-
-    @Query("SELECT r FROM Review r " +
+    /**
+     * 사용자가 작성한 리뷰 목록을 조회합니다. (내가 쓴 리뷰)
+     * * 1. N+1 문제 해결을 위해 ReviewImages를 LEFT JOIN FETCH 합니다.
+     * 2. 사진이 없는 리뷰 (ri IS NULL)와 APPROVED 상태의 사진이 있는 리뷰만 포함합니다.
+     * 3. DISTINCT를 사용하여 JOIN FETCH로 인해 발생할 수 있는 Review 엔티티의 중복을 제거합니다.
+     * (GROUP BY를 제거하여 'only_full_group_by' 에러를 회피합니다.)
+     */
+    @Query("SELECT DISTINCT r FROM Review r " +
             "LEFT JOIN FETCH r.reviewImages ri " +
             "WHERE r.user = :user " +
-            // [!] r.reviewImages 컬렉션 자체가 비어있거나,
-            //     APPROVED 상태의 이미지가 하나라도 있는 경우를 포함하도록 조건을 변경
-            "AND (ri IS NULL OR ri.status = 'APPROVED')" +
-            "GROUP BY r.id " + // DISTINCT를 대신하여 Group By를 사용하여 중복 리뷰 제거
-            "ORDER BY r.createdAt DESC") // 일반적으로 최신순 정렬//APPROVED 상태만 필터링
+            "AND (ri IS NULL OR ri.status = 'APPROVED') " + // ri IS NULL을 포함하여 사진이 없는 리뷰도 조회
+            "ORDER BY r.createdAt DESC") // 최신순 정렬
     List<Review> findAllByUser(@Param("user") User user);
 
 
@@ -68,6 +71,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "ORDER BY r.createdAt DESC")
     // [!] 메서드 이름 변경 및 tag 파라미터 제거
     List<Review> findByToiletId_HandicappedOnly(@Param("toiletId") Long toiletId);
+
 }
 
 
