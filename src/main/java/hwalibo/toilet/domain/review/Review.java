@@ -1,5 +1,6 @@
 package hwalibo.toilet.domain.review;
 
+import hwalibo.toilet.domain.likes.Likes;
 import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.type.Tag;
 import hwalibo.toilet.domain.user.User;
@@ -41,6 +42,11 @@ public class Review {
     @JoinColumn(name = "user_id", nullable = false)
     @NotFound(action = NotFoundAction.IGNORE)
     private User user;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Likes> likes = new ArrayList<>();
+    // Likes 엔티티가 Review를 참조하므로 mappedBy="review"
 
     @Column(columnDefinition = "TEXT") // 더 긴 텍스트를 저장할 수 있도록 TEXT 타입으로 설정
     private String description;

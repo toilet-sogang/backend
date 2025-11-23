@@ -38,6 +38,6 @@ public class Likes {
     // ✨ 다대일(N:1) 관계: Likes(N) : Review(1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    //@OnDelete(action = OnDeleteAction.CASCADE)
     private Review review;
 }
