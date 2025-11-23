@@ -43,10 +43,10 @@ public class Review {
     @NotFound(action = NotFoundAction.IGNORE)
     private User user;
 
+    // Likes 컬렉션: Review 삭제 시 연관된 Likes 레코드도 함께 삭제 (이전 단계에서 추가됨)
     @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Likes> likes = new ArrayList<>();
-    // Likes 엔티티가 Review를 참조하므로 mappedBy="review"
 
     @Column(columnDefinition = "TEXT") // 더 긴 텍스트를 저장할 수 있도록 TEXT 타입으로 설정
     private String description;
@@ -58,7 +58,7 @@ public class Review {
     @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC, id ASC") // 이미지 순서 정렬
-    @Where(clause = "status = 'APPROVED'") //APPROVED만 보이기
+    // ⚠️ 외래 키 에러 해결을 위해 @Where(clause = "status = 'APPROVED'") 조건이 제거되었습니다.
     private List<ReviewImage> reviewImages = new ArrayList<>();
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")
