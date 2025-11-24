@@ -35,7 +35,7 @@ public class ReviewDataLoader {
 
     // 가정된 사용자 ID 목록 (ID 1부터 7)
     private static final List<Long> USER_IDS = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L);
-    private static final int REVIEWS_PER_TOILET = 3;
+    private static final int REVIEWS_PER_TOILET = 4;
     private final Random random = new Random();
 
     // ------------------- 태그 그룹 정의 (생략) -------------------
