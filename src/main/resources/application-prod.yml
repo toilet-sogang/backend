@@ -95,12 +95,7 @@ server:
 app:
   oauth2:
     redirect-uri: "https://frontendproj-three.vercel.app/auth/callback"
-<<<<<<< HEAD
-    #"http://localhost:5173/auth/callback"
-=======
     # "http://localhost:5173/auth/callback"
-
->>>>>>> e6c5ef12cb7bd0603cf311f9304a0cc4640160ab
 
 
 feature:
