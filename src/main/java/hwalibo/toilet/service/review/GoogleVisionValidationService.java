@@ -6,6 +6,7 @@ import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.service.s3.S3DownloadService;
+import hwalibo.toilet.service.s3.S3UploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
@@ -26,6 +27,7 @@ public class GoogleVisionValidationService {
     private final ReviewImageRepository reviewImageRepository;
     private final S3DownloadService s3DownloadService;
     private final ImageAnnotatorClient imageAnnotatorClient;
+    private final S3UploadService s3UploadService;
 
     // 리사이징 기준 크기 (640px이면 분석에 충분)
     private static final int TARGET_SIZE = 640;
@@ -224,19 +226,25 @@ public class GoogleVisionValidationService {
     /**
      * 검수 결과를 DB에 반영
      */
+    @Transactional
     private void updateImageStatus(Long reviewImageId, String validationResult) {
         ReviewImage image = reviewImageRepository.findById(reviewImageId)
                 .orElse(null);
 
         if (image == null) return;
 
+        String imageUrl = image.getUrl();
+
         // "VALID" 인 경우 승인, 그 외에는 거부 (필요하면 거부사유 저장 컬럼 추가)
         if (validationResult != null && "VALID".equalsIgnoreCase(validationResult.trim())) {
             image.approve();
         }else{
-            image.reject();
+            // 1) S3에서 파일 삭제
+            s3UploadService.delete(imageUrl);
+
+            // 2) DB에서 데이터 영구 삭제 (Hard Delete)
+            reviewImageRepository.delete(image);
         }
 
-        reviewImageRepository.save(image);
     }
 }

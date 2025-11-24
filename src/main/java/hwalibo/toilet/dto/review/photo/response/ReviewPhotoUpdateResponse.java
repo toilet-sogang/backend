@@ -29,7 +29,6 @@ public class ReviewPhotoUpdateResponse {
     @Builder
     public static class UpdatedPhotoDto {
         private int index;
-        private String photoUrl;
         private ValidationStatus status;
     }
 }
