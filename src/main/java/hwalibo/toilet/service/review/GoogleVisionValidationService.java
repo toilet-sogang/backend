@@ -227,7 +227,7 @@ public class GoogleVisionValidationService {
      * 검수 결과를 DB에 반영
      */
     @Transactional
-    private void updateImageStatus(Long reviewImageId, String validationResult) {
+    public void updateImageStatus(Long reviewImageId, String validationResult) {
         ReviewImage image = reviewImageRepository.findById(reviewImageId)
                 .orElse(null);
 
