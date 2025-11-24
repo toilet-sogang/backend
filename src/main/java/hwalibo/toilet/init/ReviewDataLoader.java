@@ -1,4 +1,5 @@
 package hwalibo.toilet.init;
+
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.domain.type.Gender;
@@ -20,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors; // 💡 Collectors 추가
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -29,25 +30,25 @@ import java.util.stream.Collectors; // 💡 Collectors 추가
 public class ReviewDataLoader {
 
     private final ReviewRepository reviewRepository;
-    private final ToiletRepository toiletRepository;
-    private final UserRepository userRepository;
+    private final ToiletRepository toiletRepository;     // 화장실 통계 저장을 위해 필요
+    private final UserRepository userRepository;         // 사용자 리뷰 개수 저장을 위해 필요
     private final UserRankService userRankService;
 
     // 가정된 사용자 ID 목록 (ID 1부터 7)
     private static final List<Long> USER_IDS = Arrays.asList(1L, 2L, 3L, 4L, 5L, 6L, 7L);
-    private static final int REVIEWS_PER_TOILET = 4;
     private final Random random = new Random();
 
-    // ------------------- 태그 그룹 정의 (생략) -------------------
+    // ------------------- 태그 그룹 정의 -------------------
     private static final List<Tag> POSITIVE_TAGS = Arrays.asList(
             Tag.TOILET_CLEAN, Tag.SINK_CLEAN, Tag.GOOD_VENTILATION, Tag.ENOUGH_HANDSOAP, Tag.BRIGHT_LIGHTING
     );
     private static final List<Tag> NEGATIVE_TAGS = Arrays.asList(
             Tag.TRASH_OVERFLOW, Tag.DIRTY_FLOOR, Tag.DIRTY_MIRROR, Tag.NO_TOILET_PAPER, Tag.BAD_ODOR
     );
+
+    // ------------------- 리뷰 문구 및 태그 데이터 구조 -------------------
     private record ReviewTemplate(String description, Tag mainTag, int minStar, int maxStar) {}
     private static final List<ReviewTemplate> TEMPLATES = Arrays.asList(
-            // ... (45개의 리뷰 템플릿 코드 생략) ...
             // --- 긍정적 리뷰 (4~5점) - 총 15개 ---
             new ReviewTemplate("변기 위생 상태가 매우 훌륭합니다. [STATION]역 최고! (청결) (평점: %d점)", Tag.TOILET_CLEAN, 4, 5),
             new ReviewTemplate("세면대가 물기 없이 깨끗해서 좋았어요. 거울도 맑아요. (평점: %d점)", Tag.SINK_CLEAN, 4, 5),
@@ -123,7 +124,7 @@ public class ReviewDataLoader {
             return;
         }
 
-        // 💡 1. 사용자 리스트를 성별로 분리
+        // 1. 사용자 리스트를 성별로 분리
         List<User> maleUsers = users.stream()
                 .filter(u -> u.getGender() == Gender.M)
                 .collect(Collectors.toList());
@@ -131,24 +132,35 @@ public class ReviewDataLoader {
                 .filter(u -> u.getGender() == Gender.F)
                 .collect(Collectors.toList());
 
+        // 화장실당 리뷰 목표 개수를 유저 수에 따라 동적으로 설정
+        final int MALE_REVIEW_TARGET = maleUsers.size();   // 3개
+        final int FEMALE_REVIEW_TARGET = femaleUsers.size(); // 4개
+
         int reviewCount = 0;
-        // ❌ 전역 userIndex 제거
 
         log.info("⭐ 리뷰 초기화 시작: 총 {}개의 화장실, 남성 유저 {}명, 여성 유저 {}명.",
                 toilets.size(), maleUsers.size(), femaleUsers.size());
+        log.info("🎯 목표 리뷰: 남성 화장실당 {}개, 여성 화장실당 {}개. 총 목표 개수: {}개",
+                MALE_REVIEW_TARGET, FEMALE_REVIEW_TARGET, MALE_REVIEW_TARGET * 301 + FEMALE_REVIEW_TARGET * 301);
 
-        // 💡 화장실 성별에 따라 사용할 유저 리스트 결정
         List<User> targetUsers;
-        int localUserIndex; // 💡 2. 각 화장실마다 로컬 인덱스 사용
+        int targetReviewCount;
+        int localUserIndex;
 
         for (Toilet toilet : toilets) {
 
             Gender toiletGender = toilet.getGender();
 
+            // 2. Gender.M과 Gender.F를 명확히 분리하여 리뷰 목표 개수 할당
             if (toiletGender == Gender.M) {
                 targetUsers = maleUsers;
-            } else { // Gender.FEMALE
+                targetReviewCount = MALE_REVIEW_TARGET;
+            } else if (toiletGender == Gender.F) {
                 targetUsers = femaleUsers;
+                targetReviewCount = FEMALE_REVIEW_TARGET;
+            } else {
+                log.warn("⚠️ 화장실 {}는 예상치 못한 성별 값({})입니다. 스킵합니다.", toilet.getId(), toiletGender);
+                continue;
             }
 
             if (targetUsers.isEmpty()) {
@@ -157,16 +169,13 @@ public class ReviewDataLoader {
             }
 
             int createdForThisToilet = 0;
-            localUserIndex = 0; // 💡 로컬 인덱스 초기화
+            localUserIndex = 0; // 로컬 인덱스 초기화
 
-            // 화장실당 최대 REVIEWS_PER_TOILET 개까지 리뷰 생성
-            while (createdForThisToilet < REVIEWS_PER_TOILET) {
+            // 화장실당 목표 개수(3개 또는 4개)까지 리뷰 생성
+            while (createdForThisToilet < targetReviewCount) {
 
-                // 💡 3. targetUsers 리스트에서 유저 순환
+                // 유저 순환 및 리뷰 정보 생성
                 User currentUser = targetUsers.get(localUserIndex % targetUsers.size());
-
-                // ❌ 기존의 복잡하고 오류 유발했던 성별 체크 및 스킵 로직 제거
-
                 ReviewTemplate template = TEMPLATES.get(random.nextInt(TEMPLATES.size()));
                 int starValue = random.nextInt(template.maxStar() - template.minStar() + 1) + template.minStar();
 
@@ -174,9 +183,10 @@ public class ReviewDataLoader {
                         .replace("[STATION]", toilet.getName());
 
                 List<Tag> tags = new ArrayList<>();
+                // 메인 태그 추가
                 tags.add(template.mainTag());
 
-                // 0~1개의 추가 태그
+                // 3. 50% 확률로 0~1개의 추가 태그 선택 (생략하지 않음)
                 if (random.nextDouble() < 0.5) {
                     List<Tag> potentialTags;
                     if (POSITIVE_TAGS.contains(template.mainTag())) {
@@ -204,15 +214,26 @@ public class ReviewDataLoader {
                 reviewCount++;
                 createdForThisToilet++;
 
+                // ----------------------------------------------------
+                // ✨ 사용자 및 화장실 통계 업데이트 및 DB 반영
+                // ----------------------------------------------------
+
+                // 1. 사용자 리뷰 개수 업데이트 및 DB 반영
                 currentUser.addReview();
+                userRepository.save(currentUser);
+
+                // 2. 화장실 통계 (총 리뷰 개수, 평균 별점) 업데이트 및 DB 반영
                 toilet.updateReviewStats((double) starValue);
+                toiletRepository.save(toilet); // 👈 DB 반영
+
+                // 3. 랭킹 캐시 무효화 (상위 순위 재계산을 위해)
                 userRankService.evictUserRate(currentUser.getId());
 
-                localUserIndex++; // 💡 다음 유저로 이동
+                localUserIndex++;
             }
         }
 
         log.info("✅ 리뷰 초기화 완료. 총 {}개의 리뷰가 성공적으로 생성되었습니다.", reviewCount);
-        // ... (기타 로그 생략)
+        log.info("➡️ 생성된 리뷰 개수는 {}개입니다. (목표 리뷰 개수 2107개)", reviewCount);
     }
 }
