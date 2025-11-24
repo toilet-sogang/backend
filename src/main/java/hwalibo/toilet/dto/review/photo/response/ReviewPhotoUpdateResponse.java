@@ -1,6 +1,8 @@
 package hwalibo.toilet.dto.review.photo.response;
 
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.type.ValidationStatus;
+import hwalibo.toilet.service.user.UserService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,21 +16,20 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class ReviewPhotoUpdateResponse {
-    private List<PhotoUrlResponse> photos;
+    private List<UpdatedPhotoDto> photos;
 
-    // Service Layer의 List<String> URL들을 Response DTO로 변환하는 팩토리 메서드
-    public static ReviewPhotoUpdateResponse of(List<ReviewImage> urls) {
-        List<PhotoUrlResponse> photoResponses = urls.stream()
-                // String URL -> PhotoUrlResponse 객체로 변환
-                .map(image -> PhotoUrlResponse.builder()
-                        .photoUrl(image.getUrl())
-                        .photoId(image.getId())
-                        .build())
-                .collect(Collectors.toList());
-
+    // 그냥 리스트를 받는 생성자 (Builder가 처리)
+    public static ReviewPhotoUpdateResponse of(List<UpdatedPhotoDto> photos) {
         return ReviewPhotoUpdateResponse.builder()
-                .photos(photoResponses)
+                .photos(photos)
                 .build();
     }
 
+    @Getter
+    @Builder
+    public static class UpdatedPhotoDto {
+        private int index;
+        private String photoUrl;
+        private ValidationStatus status;
+    }
 }

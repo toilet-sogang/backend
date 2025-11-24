@@ -20,6 +20,8 @@ import hwalibo.toilet.service.s3.S3UploadService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -92,6 +94,16 @@ public class UserService {
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
 
+        //rejected 이미지는 삭제
+        Iterator<ReviewImage> rejectIterator = review.getReviewImages().iterator();
+        while (rejectIterator.hasNext()) {
+            ReviewImage image = rejectIterator.next();
+            if (image.getStatus() == ValidationStatus.REJECTED) {
+                s3UploadService.delete(image.getUrl());
+                rejectIterator.remove();
+            }
+        }
+
         // 3. [삭제 로직]
         if (request != null && request.getDeletedImageIds() != null) {
             Set<Long> idsToDelete = new HashSet<>(request.getDeletedImageIds());
@@ -126,60 +138,71 @@ public class UserService {
             throw new IllegalArgumentException("이미지는 총 2개까지만 등록할 수 있습니다.");
         }
 
-        List<String> uploadedUrls = new ArrayList<>();
+        List<NewImageContext> contexts = new ArrayList<>();
         if (newImageCount > 0) {
-            uploadedUrls = s3UploadService.uploadAll(newImages, "reviews");
+            List<String> uploadedUrls = s3UploadService.uploadAll(newImages, "reviews");
+
+            int nextOrder = review.getReviewImages().stream()
+                    .mapToInt(ReviewImage::getSortOrder).max().orElse(-1) + 1;
+
+            for (int i = 0; i < uploadedUrls.size(); i++) {
+                String url = uploadedUrls.get(i);
+
+                ReviewImage image = ReviewImage.builder()
+                        .url(url)
+                        .review(review)
+                        .sortOrder(nextOrder++)
+                        .status(ValidationStatus.PENDING) // 일단 PENDING (비동기 검수 전)
+                        .build();
+
+                review.getReviewImages().add(image);
+
+                contexts.add(new NewImageContext(i, image));
+            }
         }
 
-        int nextOrder = review.getReviewImages().stream()
-                .mapToInt(ReviewImage::getSortOrder).max().orElse(-1) + 1;
-
-        List<ReviewImage> imagesToSave = new ArrayList<>();
-        for (String url : uploadedUrls) {
-            imagesToSave.add(ReviewImage.builder()
-                    .url(url)
-                    .review(review) // 부모(review)와의 연관관계 설정
-                    .sortOrder(nextOrder++)
-                    .build());
-        }
-
-        if (!imagesToSave.isEmpty()) {
-
-            // 5-1. 컬렉션에 추가 (Cascade 저장 예약)
-            review.getReviewImages().addAll(imagesToSave);
-
-            // 5-2. ✨ [추가된 부분] 트랜잭션 커밋 후 비동기 검수 실행
+        if (!contexts.isEmpty()) {
+            //이미지 비동기 검수
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    // 커밋이 완료되면 imagesToSave의 객체들에 ID가 생성되어 있습니다.
-                    for (ReviewImage image : imagesToSave) {
+                    for (NewImageContext ctx : contexts) {
                         try {
-                            if (image.getId() != null) {
-                                googleVisionValidationService.validateImage(image.getId(), image.getUrl());
+                            if (ctx.getImage().getId() != null) {
+                                googleVisionValidationService.validateImage(ctx.getImage().getId(),ctx.getImage().getUrl());
                             }
                         } catch (Exception e) {
-                            log.error("이미지 수정 비동기 검수 호출 실패: ID={}, URL={}", image.getId(), image.getUrl(), e);
+                            log.error("이미지 수정 비동기 검수 호출 실패: index={}, url={}", ctx.getIndexInRequest(), ctx.getImage().getUrl());
                         }
                     }
                 }
             });
 
+
             log.info("새 이미지 저장 예약 및 비동기 검수 등록 완료");
         }
 
-        Review updatedReview = reviewRepository.findByIdWithImages(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
+        List<ReviewPhotoUpdateResponse.UpdatedPhotoDto> dtos = contexts.stream()
+                .map(ctx -> ReviewPhotoUpdateResponse.UpdatedPhotoDto.builder()
+                        .index(ctx.getIndexInRequest())
+                        .photoUrl(ctx.getImage().getUrl())
+                        .status(ctx.getImage().getStatus())
+                        .build())
+                .toList();
 
-
-        List<ReviewImage> finalImages = updatedReview.getReviewImages();
-
-        return ReviewPhotoUpdateResponse.of(finalImages);
+        return ReviewPhotoUpdateResponse.of(dtos);
 
     }
 
     private UserResponse buildUserResponseWithRate(User user) {
         int rate = userRankService.calculateUserRate(user.getId());  // ✔ 프록시 통해 호출됨 → 캐싱됨
         return UserResponse.from(user, rate);
+    }
+
+    @Getter
+    @AllArgsConstructor
+    private static class NewImageContext {
+        private int indexInRequest; // 프론트가 보낸 photos 배열의 인덱스 (0, 1, 2...)
+        private ReviewImage image;  // DB에 저장된(혹은 저장할) 엔티티
     }
 }
