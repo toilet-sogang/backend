@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors; // 💡 Collectors 추가
 
 @Slf4j
 @Component
@@ -37,20 +38,16 @@ public class ReviewDataLoader {
     private static final int REVIEWS_PER_TOILET = 3;
     private final Random random = new Random();
 
-    // ------------------- 태그 그룹 정의 -------------------
+    // ------------------- 태그 그룹 정의 (생략) -------------------
     private static final List<Tag> POSITIVE_TAGS = Arrays.asList(
             Tag.TOILET_CLEAN, Tag.SINK_CLEAN, Tag.GOOD_VENTILATION, Tag.ENOUGH_HANDSOAP, Tag.BRIGHT_LIGHTING
     );
     private static final List<Tag> NEGATIVE_TAGS = Arrays.asList(
             Tag.TRASH_OVERFLOW, Tag.DIRTY_FLOOR, Tag.DIRTY_MIRROR, Tag.NO_TOILET_PAPER, Tag.BAD_ODOR
     );
-
-    // ------------------- 리뷰 문구 및 태그 데이터 구조 -------------------
-
     private record ReviewTemplate(String description, Tag mainTag, int minStar, int maxStar) {}
-
-    // (이전과 동일한 템플릿 리스트 생략 - 약 45개의 리뷰 템플릿 포함)
     private static final List<ReviewTemplate> TEMPLATES = Arrays.asList(
+            // ... (45개의 리뷰 템플릿 코드 생략) ...
             // --- 긍정적 리뷰 (4~5점) - 총 15개 ---
             new ReviewTemplate("변기 위생 상태가 매우 훌륭합니다. [STATION]역 최고! (청결) (평점: %d점)", Tag.TOILET_CLEAN, 4, 5),
             new ReviewTemplate("세면대가 물기 없이 깨끗해서 좋았어요. 거울도 맑아요. (평점: %d점)", Tag.SINK_CLEAN, 4, 5),
@@ -116,7 +113,7 @@ public class ReviewDataLoader {
 
         List<User> users = userRepository.findAllById(USER_IDS);
         if (users.size() < USER_IDS.size()) {
-            log.warn("⚠️ 필요한 사용자 (ID 1-6)가 모두 발견되지 않았습니다. 리뷰 초기화를 건너킵니다.");
+            log.warn("⚠️ 필요한 사용자 (ID 1-7)가 모두 발견되지 않았습니다. 리뷰 초기화를 건너킵니다.");
             return;
         }
 
@@ -126,41 +123,49 @@ public class ReviewDataLoader {
             return;
         }
 
-        int reviewCount = 0;
-        int userIndex = 0; // 6명의 리뷰 작성자를 순환시키기 위한 인덱스
+        // 💡 1. 사용자 리스트를 성별로 분리
+        List<User> maleUsers = users.stream()
+                .filter(u -> u.getGender() == Gender.M)
+                .collect(Collectors.toList());
+        List<User> femaleUsers = users.stream()
+                .filter(u -> u.getGender() == Gender.F)
+                .collect(Collectors.toList());
 
-        log.info("⭐ 리뷰 초기화 시작: 총 {}개의 화장실, {}명의 사용자.", toilets.size(), users.size());
+        int reviewCount = 0;
+        // ❌ 전역 userIndex 제거
+
+        log.info("⭐ 리뷰 초기화 시작: 총 {}개의 화장실, 남성 유저 {}명, 여성 유저 {}명.",
+                toilets.size(), maleUsers.size(), femaleUsers.size());
+
+        // 💡 화장실 성별에 따라 사용할 유저 리스트 결정
+        List<User> targetUsers;
+        int localUserIndex; // 💡 2. 각 화장실마다 로컬 인덱스 사용
 
         for (Toilet toilet : toilets) {
 
-            Gender toiletGender = toilet.getGender(); // 🚻 화장실 성별 (Gender enum)
+            Gender toiletGender = toilet.getGender();
 
-            int createdForThisToilet = 0; // 이 화장실에 대해 실제 생성된 리뷰 개수
+            if (toiletGender == Gender.M) {
+                targetUsers = maleUsers;
+            } else { // Gender.FEMALE
+                targetUsers = femaleUsers;
+            }
 
-            // 화장실당 최대 REVIEWS_PER_TOILET 개까지 리뷰 생성 시도
+            if (targetUsers.isEmpty()) {
+                log.warn("⚠️ 화장실 {} (gender={}) 에 대해 일치하는 성별 유저 풀이 비어있습니다. 스킵합니다.", toilet.getId(), toiletGender);
+                continue;
+            }
+
+            int createdForThisToilet = 0;
+            localUserIndex = 0; // 💡 로컬 인덱스 초기화
+
+            // 화장실당 최대 REVIEWS_PER_TOILET 개까지 리뷰 생성
             while (createdForThisToilet < REVIEWS_PER_TOILET) {
 
-                User currentUser = users.get(userIndex % users.size());
-                Gender userGender = currentUser.getGender();  // 👤 유저 성별 (Gender enum)
+                // 💡 3. targetUsers 리스트에서 유저 순환
+                User currentUser = targetUsers.get(localUserIndex % targetUsers.size());
 
-                // 🔻 성별이 다르면 이 유저는 이 화장실에 대해 리뷰 패스
-                // (예: 화장실 M, 유저 F → 패스)
-                if (userGender != toiletGender) {
-                    userIndex++; // 그냥 다음 유저로 넘기고, 이 화장실에 대해 리뷰 생성 안 함
-
-                    // 혹시라도 모든 유저가 이 화장실 성별과 안 맞아서
-                    // 무한 루프 도는 경우를 대비한 세이프가드
-                    if (userIndex > users.size() * 10) {
-                        log.warn("⚠️ 화장실 {} (gender={}) 에 대해 일치하는 성별 유저를 못 찾았습니다. 스킵합니다.",
-                                toilet.getId(), toiletGender);
-                        break;
-                    }
-                    continue;
-                }
-
-                // ================================
-                // ✅ 여기부터는 성별이 일치하는 경우만
-                // ================================
+                // ❌ 기존의 복잡하고 오류 유발했던 성별 체크 및 스킵 로직 제거
 
                 ReviewTemplate template = TEMPLATES.get(random.nextInt(TEMPLATES.size()));
                 int starValue = random.nextInt(template.maxStar() - template.minStar() + 1) + template.minStar();
@@ -169,7 +174,6 @@ public class ReviewDataLoader {
                         .replace("[STATION]", toilet.getName());
 
                 List<Tag> tags = new ArrayList<>();
-                // 메인 태그
                 tags.add(template.mainTag());
 
                 // 0~1개의 추가 태그
@@ -198,18 +202,17 @@ public class ReviewDataLoader {
 
                 reviewRepository.save(review);
                 reviewCount++;
-                createdForThisToilet++;   // 이 화장실에서 하나 생성했다고 카운트
+                createdForThisToilet++;
 
                 currentUser.addReview();
                 toilet.updateReviewStats((double) starValue);
                 userRankService.evictUserRate(currentUser.getId());
 
-                userIndex++; // 다음 유저로 이동
+                localUserIndex++; // 💡 다음 유저로 이동
             }
         }
 
         log.info("✅ 리뷰 초기화 완료. 총 {}개의 리뷰가 성공적으로 생성되었습니다.", reviewCount);
-        log.info("➡️ 장애인 화장실 여부(isDis)는 5% 확률로 설정되었습니다.");
-        log.info("➡️ 리뷰 작성자의 랭킹 캐시가 모두 무효화되어 다음 API 호출 시 최신 랭킹이 계산됩니다.");
+        // ... (기타 로그 생략)
     }
 }
