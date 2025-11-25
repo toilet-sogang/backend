@@ -94,8 +94,8 @@ server:
 
 app:
   oauth2:
-    redirect-uri: "http://localhost:5173/auth/callback"
-    # "https://hwalibo.vercel.app/auth/callback"
+    redirect-uri: "https://hwalibo.vercel.app/auth/callback"
+    #"http://localhost:5173/auth/callback"
 
 feature:
   vision:
