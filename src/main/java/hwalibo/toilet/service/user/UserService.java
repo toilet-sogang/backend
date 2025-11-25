@@ -158,6 +158,7 @@ public class UserService {
                 review.getReviewImages().add(image);
 
                 contexts.add(new NewImageContext(i, image));
+                reviewRepository.flush();
             }
         }
 
