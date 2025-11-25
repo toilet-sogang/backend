@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface LikesRepository extends JpaRepository<Likes, Long> {
-
     /**
      * 특정 사용자가 특정 리뷰에 '좋아요'를 눌렀는지 확인할 때 사용합니다.
      * '좋아요' 기능 구현의 핵심 메소드입니다.
@@ -16,6 +15,4 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
      * @return Optional<Likes>
      */
     Optional<Likes> findByUserAndReview(User user, Review review);
-
-
 }

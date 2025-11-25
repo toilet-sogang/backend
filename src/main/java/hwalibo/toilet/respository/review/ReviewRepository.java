@@ -31,13 +31,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // toilet_id 기준으로 리뷰 정렬 조회
     List<Review> findByToiletIdOrderByCreatedAtAsc(Long toiletId);
 
-
-    //id로 review와 reviewImage 찾기
-    @Query("SELECT r FROM Review r LEFT JOIN FETCH r.reviewImages WHERE r.id = :reviewId")
-    Optional<Review> findByIdWithImages(@Param("reviewId") Long reviewId);
-
-
-
     /**
      * 1. 최신순 (기본값)
      * (N+1 해결을 위해 User와 ReviewImages를 한 번에 Join Fetch)
@@ -66,8 +59,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("SELECT r FROM Review r " +
             "LEFT JOIN FETCH r.user " +
             "LEFT JOIN FETCH r.reviewImages " +
-            "WHERE r.toilet.id = :toiletId AND r.isDis = true " + // [!] 이 부분 수정
+            "WHERE r.toilet.id = :toiletId AND r.isDis = true " +
             "ORDER BY r.createdAt DESC")
-    // [!] 메서드 이름 변경 및 tag 파라미터 제거
     List<Review> findByToiletId_HandicappedOnly(@Param("toiletId") Long toiletId);
 }

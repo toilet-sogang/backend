@@ -8,10 +8,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-
-    // 최초 소셜 로그인 시 사용 (회원가입 여부 확인)
-    Optional<User> findByProviderAndProviderId(String provider, String providerId);
-
     // 토큰 재발급 시 사용
     Optional<User> findByRefreshToken(String refreshToken);
 
@@ -37,7 +33,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //닉네임 중복 여부 확인
     boolean existsByName(String name);
-
 
     @Query(
             value = "SELECT * FROM users WHERE provider = :provider AND provider_id = :providerId LIMIT 1",

@@ -66,7 +66,6 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "AND ri.status = 'APPROVED'" )
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
 
-    List<ReviewImage> findByReviewId(Long reviewId);
 }
 
 
