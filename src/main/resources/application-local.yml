@@ -91,5 +91,5 @@ google:
 app:
   oauth2:
     redirect-uri: http://localhost:8080/index.html
-    #https://frontendproj-git-main-choiys-projects.vercel.app/auth/callback
+    #https://hwalibo.vercel.app/auth/callback
 

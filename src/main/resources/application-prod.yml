@@ -82,7 +82,7 @@ springdoc:
 cors:
   allowed-origins:
     - "https://hwalibo-backend.duckdns.org"
-    - "https://frontendproj-three.vercel.app/"
+    - "https://hwalibo.vercel.app"
     - "http://localhost:5173"
 
 logging:
@@ -95,7 +95,7 @@ server:
 app:
   oauth2:
     redirect-uri: "http://localhost:5173/auth/callback"
-    # "https://frontendproj-three.vercel.app/auth/callback"
+    # "https://hwalibo.vercel.app/auth/callback"
 
 feature:
   vision:

@@ -11,7 +11,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "https://frontendproj-three.vercel.app",
+                        "https://hwalibo.vercel.app",
                         "https://hwalibo-backend.duckdns.org",
                         "http://localhost:5173"
                 )
