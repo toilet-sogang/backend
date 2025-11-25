@@ -204,6 +204,6 @@ public class ReviewDataLoader {
             }
         }
 
-        log.info("리뷰 생성 완료: 총 {}개 생성됨.", reviewCount);
+        log.info("리뷰 생성 완료: 총 {}개의 리뷰가 생성되었습니다.", reviewCount);
     }
 }
