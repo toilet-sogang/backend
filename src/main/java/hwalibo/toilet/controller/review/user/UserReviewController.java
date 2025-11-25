@@ -1,4 +1,4 @@
-package hwalibo.toilet.controller.review;
+package hwalibo.toilet.controller.review.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hwalibo.toilet.domain.user.User;
@@ -9,11 +9,9 @@ import hwalibo.toilet.dto.review.request.ReviewUpdateRequest;
 import hwalibo.toilet.dto.review.response.MyReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewUpdateResponse;
 import hwalibo.toilet.service.review.ReviewCommandService;
-import hwalibo.toilet.service.review.ReviewQueryService;
+import hwalibo.toilet.service.review.query.ReviewQueryService;
 import hwalibo.toilet.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +26,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.channels.MulticastChannel;
 import java.util.List;
 
 @RestController

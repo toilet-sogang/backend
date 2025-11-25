@@ -7,6 +7,7 @@ import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.domain.type.Role;
 import hwalibo.toilet.oauth2.provider.NaverUserInfo;
 import hwalibo.toilet.oauth2.provider.OAuth2UserInfo;
+import hwalibo.toilet.respository.user.UserQueryRepository;
 import hwalibo.toilet.respository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final UserQueryRepository userQueryRepository;
 
     @Override
     @Transactional
@@ -40,7 +42,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String providerId = oAuth2UserInfo.getProviderId();
         Gender genderEnum = oAuth2UserInfo.getGender();
 
-        User user = userRepository.findUserEvenIfDeleted(provider, providerId)
+        User user = userQueryRepository.findUserEvenIfDeleted(provider, providerId)
                 .map(existingUser -> {
 
                     // 탈퇴 상태면 복구 (재가입)

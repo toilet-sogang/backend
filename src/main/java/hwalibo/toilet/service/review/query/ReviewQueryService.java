@@ -1,18 +1,16 @@
-package hwalibo.toilet.service.review;
+package hwalibo.toilet.service.review.query;
 
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.user.User;
-import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.dto.review.photo.response.ImageDto;
 import hwalibo.toilet.dto.review.response.MyReviewListResponse;
 import hwalibo.toilet.dto.review.response.MyReviewResponse;
+import hwalibo.toilet.respository.review.ReviewQueryRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,10 +19,10 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ReviewQueryService {
 
-    private final ReviewRepository reviewRepository;
+    private final ReviewQueryRepository reviewQueryRepository;
 
     public MyReviewListResponse getMyReviews(User loginUser) {
-        List<Review> reviews = reviewRepository.findAllByUser(loginUser);
+        List<Review> reviews = reviewQueryRepository.findAllByUser(loginUser);
         List<MyReviewResponse> items = reviews.stream()
                 .map(r -> new MyReviewResponse(
                         r.getId(),

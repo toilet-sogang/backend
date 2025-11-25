@@ -31,11 +31,8 @@ public class ToiletController {
     @GetMapping("/{toiletId}")
     public ResponseEntity<ApiResponse<ToiletDetailResponse>> toiletDetail(
             @AuthenticationPrincipal User loginUser,@PathVariable("toiletId") Long toiletId)
-
             {
-
             ToiletDetailResponse response=toiletService.getToiletDetail(loginUser,toiletId);
-
             return ResponseEntity.ok(new ApiResponse<>(true, 200, "화장실 상세 조회 성공", response));
     }
 }

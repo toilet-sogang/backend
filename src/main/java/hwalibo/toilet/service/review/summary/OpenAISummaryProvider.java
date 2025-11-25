@@ -1,4 +1,4 @@
-package hwalibo.toilet.service.review;
+package hwalibo.toilet.service.review.summary;
 
 import hwalibo.toilet.dto.chat.request.ChatCompletionRequest;
 import hwalibo.toilet.dto.chat.response.ChatCompletionResponse;

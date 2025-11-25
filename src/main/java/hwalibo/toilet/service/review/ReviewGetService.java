@@ -10,8 +10,8 @@ import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewResponse;
-import hwalibo.toilet.respository.review.ReviewImageRepository;
-import hwalibo.toilet.respository.review.ReviewRepository;
+import hwalibo.toilet.respository.review.ReviewQueryRepository;
+import hwalibo.toilet.respository.review.image.ReviewImageQueryRepository;
 import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.utils.CursorUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,7 +22,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,8 +32,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewGetService {
     private final ToiletRepository toiletRepository;
-    private final ReviewRepository reviewRepository;
-    private final ReviewImageRepository reviewImageRepository;
+    private final ReviewQueryRepository reviewQueryRepository;
+    private final ReviewImageQueryRepository reviewImageQueryRepository;
 
 
     @Transactional(readOnly = true)
@@ -53,15 +52,15 @@ public class ReviewGetService {
         switch (sortType) {
             case RATING:
                 //별점순 정렬
-                reviews = reviewRepository.findByToiletId_OrderByRating(toiletId);
+                reviews = reviewQueryRepository.findByToiletId_OrderByRating(toiletId);
                 break;
             case HANDICAPPED:
                 //장애인 화장실 리뷰만 보기
-                reviews = reviewRepository.findByToiletId_HandicappedOnly(toiletId);
+                reviews = reviewQueryRepository.findByToiletId_HandicappedOnly(toiletId);
             case LATEST:
             default:
                 //toiletId로 리뷰 찾기( 최신순 정렬)
-                reviews = reviewRepository.findByToiletId_OrderByLatest(toiletId);
+                reviews = reviewQueryRepository.findByToiletId_OrderByLatest(toiletId);
 
         }
         if (reviews.isEmpty()) {
@@ -90,13 +89,13 @@ public class ReviewGetService {
         if (nextCursor == null || nextCursor.isBlank()) {
             //첫 사진 조회
             // ⭐ 수정: userGender를 두 번째 파라미터로 전달
-            imageSlice = reviewImageRepository.findFirstPageByToiletId(toiletId, userGender, pageable);
+            imageSlice = reviewImageQueryRepository.findFirstPageByToiletId(toiletId, userGender, pageable);
         } else {
             try {
                 var c = CursorUtils.decode(nextCursor);
                 // 이후 사진 조회
                 // ⭐ 수정: userGender를 두 번째 파라미터로 전달
-                imageSlice = reviewImageRepository.findNextPageByToiletId(toiletId, userGender, c.createdAt(), c.id(), pageable);
+                imageSlice = reviewImageQueryRepository.findNextPageByToiletId(toiletId, userGender, c.createdAt(), c.id(), pageable);
             } catch (Exception e) {
                 // 예: Base64 디코딩 실패 또는 형식 오류
                 throw new IllegalArgumentException("잘못된 커서 형식입니다.");
@@ -124,7 +123,7 @@ public class ReviewGetService {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
 
-        ReviewImage reviewImage=reviewImageRepository.findByIdWithReviewAndDetails(photoId)
+        ReviewImage reviewImage=reviewImageQueryRepository.findByIdWithReviewAndDetails(photoId)
                 .orElseThrow(() -> new EntityNotFoundException("사진을 찾을 수 없음"));
 
         Long actualToiletId = reviewImage.getReview().getToilet().getId();

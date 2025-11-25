@@ -4,7 +4,9 @@ import hwalibo.toilet.domain.toilet.Toilet;
 import hwalibo.toilet.dto.station.request.StationSuggestRequest;
 import hwalibo.toilet.dto.station.response.StationSearchResponse;
 import hwalibo.toilet.dto.station.response.StationSuggestResponse;
+import hwalibo.toilet.respository.toilet.ToiletQueryRepository;
 import hwalibo.toilet.respository.toilet.ToiletRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,14 +14,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class StationService {
 
     private final ToiletRepository toiletRepository;
-
-    public StationService(ToiletRepository toiletRepository) {
-        this.toiletRepository = toiletRepository;
-    }
+    private final ToiletQueryRepository toiletQueryRepository;
 
     public List<StationSearchResponse> search(String keyword) {
         List<Toilet> toilets = toiletRepository.findByNameContaining(keyword);
@@ -32,7 +32,7 @@ public class StationService {
         double lat = request.getLatitude();
         double lng = request.getLongitude();
 
-        List<Toilet> nearestStations = toiletRepository.findTop3NearestStations(lat, lng);
+        List<Toilet> nearestStations = toiletQueryRepository.findTop3NearestStations(lat, lng);
 
         List<String> names = nearestStations.stream()
                 .map(Toilet::getName)

@@ -1,11 +1,9 @@
-package hwalibo.toilet.service.review;
+package hwalibo.toilet.service.review.googlevision;
 
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import hwalibo.toilet.domain.review.ReviewImage;
-import hwalibo.toilet.domain.type.ValidationStatus;
-import hwalibo.toilet.respository.review.ReviewRepository;
-import hwalibo.toilet.respository.review.ReviewImageRepository;
+import hwalibo.toilet.respository.review.image.ReviewImageQueryRepository;
 import hwalibo.toilet.service.s3.S3DownloadService;
 import hwalibo.toilet.service.s3.S3UploadService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class GoogleVisionValidationService {
 
-    private final ReviewImageRepository reviewImageRepository;
+    private final ReviewImageQueryRepository reviewImageQueryRepository;
     private final S3DownloadService s3DownloadService;
     private final ImageAnnotatorClient imageAnnotatorClient;
     private final S3UploadService s3UploadService;
@@ -229,7 +227,7 @@ public class GoogleVisionValidationService {
      */
     @Transactional
     public void updateImageStatus(Long reviewImageId, String validationResult) {
-        ReviewImage image = reviewImageRepository.findById(reviewImageId)
+        ReviewImage image = reviewImageQueryRepository.findById(reviewImageId)
                 .orElse(null);
 
         if (image == null) return;

@@ -22,46 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/toilet")
 @Tag(name = "Review - Get")
 public class ReviewGetController {
-
-    private final ReviewLikeService reviewLikeService;
     private final ReviewGetService reviewGetService;
-
-    @PostMapping("/{toiletId}/reviews/{reviewId}/like")
-    @Operation(summary = "리뷰 좋아요", security = { @SecurityRequirement(name = "bearerAuth") })
-    public ResponseEntity<ApiResponse<Void>> like(
-            @AuthenticationPrincipal User loginUser,
-            @PathVariable Long toiletId,
-            @PathVariable Long reviewId) {
-
-        reviewLikeService.like(loginUser, toiletId, reviewId);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(
-                        true,
-                        HttpStatus.CREATED.value(),
-                        "리뷰 좋아요 성공",
-                        null
-                ));
-    }
-
-    @DeleteMapping("/{toiletId}/reviews/{reviewId}/like")
-    @Operation(summary = "리뷰 좋아요 취소", security = { @SecurityRequirement(name = "bearerAuth") })
-    public ResponseEntity<ApiResponse<Void>> unlike(
-            @AuthenticationPrincipal User loginUser,
-            @PathVariable Long toiletId,
-            @PathVariable Long reviewId) {
-
-        reviewLikeService.unlike(loginUser, toiletId, reviewId);
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(new ApiResponse<>(
-                        true,
-                        HttpStatus.NO_CONTENT.value(),
-                        "리뷰 좋아요 취소 성공",
-                        null
-                ));
-    }
-
 
     @GetMapping("/{toiletId}/reviews")
     @Operation(summary="특정 화장실 리뷰 목록 조회",security = { @SecurityRequirement(name = "bearerAuth") })

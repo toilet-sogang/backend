@@ -1,4 +1,4 @@
-package hwalibo.toilet.respository.review;
+package hwalibo.toilet.respository.review.image;
 
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.type.Gender;
@@ -8,14 +8,11 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
-
-public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
+public interface ReviewImageQueryRepository extends JpaRepository<ReviewImage,Long> {
     /**
      * 1. 첫 페이지 조회 (커서가 없을 때)
      * - 성별 필터링 추가: 로그인 유저의 성별과 화장실 성별이 일치하는 리뷰만 조회
@@ -66,6 +63,3 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "AND ri.status = 'APPROVED'" )
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
 }
-
-
-

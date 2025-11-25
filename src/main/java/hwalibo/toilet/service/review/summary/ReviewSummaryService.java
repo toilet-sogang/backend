@@ -1,4 +1,4 @@
-package hwalibo.toilet.service.review;
+package hwalibo.toilet.service.review.summary;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.dto.review.response.ReviewSummaryResponse;
 import hwalibo.toilet.exception.review.ReviewNotFoundException;

@@ -1,6 +1,6 @@
 package hwalibo.toilet.service.user;
 
-import hwalibo.toilet.respository.user.UserRepository;
+import hwalibo.toilet.respository.user.UserQueryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class UserRankService {
-    private final UserRepository userRepository;
+    private final UserQueryRepository userQueryRepository;
 
     @Cacheable(value = "userRank", key = "#userId")
     public int calculateUserRate(Long userId) {
         log.info("Cache Miss 발생! DB 조회 - userId={}", userId);
-        return userRepository.findCalculatedRateByUserId(userId)
+        return userQueryRepository.findCalculatedRateByUserId(userId)
                 .orElse(100);
     }
 

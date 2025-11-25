@@ -10,11 +10,11 @@ import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUrlResponse;
 import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
 import hwalibo.toilet.dto.review.response.ReviewCreateResponse;
-import hwalibo.toilet.respository.review.ReviewImageRepository;
+import hwalibo.toilet.respository.review.image.ReviewImageQueryRepository;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.respository.user.UserRepository;
-import hwalibo.toilet.service.review.GoogleVisionValidationService;
+import hwalibo.toilet.service.review.googlevision.GoogleVisionValidationService;
 import hwalibo.toilet.service.s3.S3UploadService;
 import hwalibo.toilet.service.user.UserRankService;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,7 +22,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -41,7 +40,7 @@ import java.util.stream.Collectors;
 public class ReviewPostService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
-    private final ReviewImageRepository reviewImageRepository;
+    private final ReviewImageQueryRepository reviewImageQueryRepository;
     private final S3UploadService s3UploadService;
     private final ToiletRepository toiletRepository;
     private final GoogleVisionValidationService googleVisionValidationService;
@@ -148,7 +147,7 @@ public class ReviewPostService {
         }
 
         // 7. db에 이미지 저장
-        reviewImageRepository.saveAll(imagesToSave);
+        reviewImageQueryRepository.saveAll(imagesToSave);
 
         // 8. 저장된 이미지들을 비동기 검증 서비스에 전달 (트랜잭션 커밋 후 실행)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -184,7 +183,7 @@ public class ReviewPostService {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
 
-        List<ReviewImage> images = reviewImageRepository.findAllById(imageIds);
+        List<ReviewImage> images = reviewImageQueryRepository.findAllById(imageIds);
 
         for (ReviewImage img : images) {
             if (!img.getReview().getUser().getId().equals(loginUser.getId())) {
