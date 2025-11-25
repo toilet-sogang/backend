@@ -71,23 +71,18 @@ public class OpenAISummaryProvider {
     private String formatToMaxBytes(String text, int maxBytes) {
         String s = (text == null ? "" : text).trim().replaceAll("\\s+", " ");
 
-        // 이미 짧으면: 마무리만 보정
         if (utf8Len(s) <= maxBytes) return ensureSentenceClosed(s, maxBytes);
 
-        // 1) maxBytes 안쪽의 '문장 끝 구두점' 직후로 자르기
         int endIdx = lastSentenceEndWithinBytes(s, maxBytes);
         if (endIdx >= 0) {
             return s.substring(0, endIdx + 1);
         }
-
-        // 2) 문장 경계가 없다면: 말줄임(…)으로 명확히 표시
         String truncated = truncateUtf8(s, Math.max(0, maxBytes - 3));
         return truncated + "…";
     }
 
     private String ensureSentenceClosed(String s, int maxBytes) {
         if (!s.isEmpty() && END_PUNCT.contains(s.charAt(s.length() - 1))) return s;
-        // 끝에 마침표 추가(바이트 초과 시 안전히 줄이고 추가)
         if (utf8Len(s) + 1 <= maxBytes) return s + ".";
         return truncateUtf8(s, Math.max(0, maxBytes - 1)) + ".";
     }
@@ -113,7 +108,7 @@ public class OpenAISummaryProvider {
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
         if (bytes.length <= maxBytes) return text;
         int cut = maxBytes;
-        while (cut > 0 && (bytes[cut] & 0xC0) == 0x80) cut--; // 멀티바이트 경계 보정
+        while (cut > 0 && (bytes[cut] & 0xC0) == 0x80) cut--;
         return new String(bytes, 0, cut, StandardCharsets.UTF_8);
     }
 }
