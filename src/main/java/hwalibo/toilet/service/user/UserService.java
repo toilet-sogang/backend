@@ -185,6 +185,7 @@ public class UserService {
         List<ReviewPhotoUpdateResponse.UpdatedPhotoDto> dtos = contexts.stream()
                 .map(ctx -> ReviewPhotoUpdateResponse.UpdatedPhotoDto.builder()
                         .index(ctx.getIndexInRequest())
+                        .imageId(ctx.getImage().getId())
                         .status(ctx.getImage().getStatus())
                         .build())
                 .toList();

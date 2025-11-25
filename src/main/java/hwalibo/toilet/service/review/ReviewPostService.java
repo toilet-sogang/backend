@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -156,14 +157,27 @@ public class ReviewPostService {
     }
 
     @Transactional(readOnly=true)
-    public List<ImageStatusResponse> getImageStatuses(User loginUser, Long reviewId){
+    public List<ImageStatusResponse> getImageStatuses(User loginUser, List<Long> imageIds){
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
 
-        List<ReviewImage> images = reviewImageRepository.findByReviewId(reviewId);
+        List<ReviewImage> images = reviewImageRepository.findAllById(imageIds);
 
-        return images.stream()
+        for (ReviewImage img : images) {
+            if (!img.getReview().getUser().getId().equals(loginUser.getId())) {
+                throw new SecurityException("조회 권한이 없는 이미지가 포함되어 있습니다.");
+            }
+        }
+
+        // DB에서 가져온 리스트(images)는 순서가 뒤섞일 수 있으므로,
+        // 요청한 imageIds 순서에 맞춰 재정렬합니다.
+        Map<Long, ReviewImage> imageMap = images.stream()
+                .collect(Collectors.toMap(ReviewImage::getId, img -> img));
+
+        return imageIds.stream() // 요청 순서대로 스트림 생성
+                .map(imageMap::get)
+                .filter(Objects::nonNull) // 혹시 DB에 없는 ID가 왔을 경우 제외
                 .map(ImageStatusResponse::new)
                 .collect(Collectors.toList());
     }

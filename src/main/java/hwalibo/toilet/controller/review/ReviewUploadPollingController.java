@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -28,9 +29,9 @@ public class ReviewUploadPollingController {
             description = "이미지 PENDING/APPROVED 여부를 받는다",
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @GetMapping("/api/v1/reviews/{reviewId}/image-status")
-    public ResponseEntity<ApiResponse<List<ImageStatusResponse>>> checkImageStatus(@AuthenticationPrincipal User loginUser, @PathVariable Long reviewId){
-        List<ImageStatusResponse> data= reviewPostService.getImageStatuses(loginUser,reviewId);
+    @GetMapping("/api/v1/reviews/image-status")
+    public ResponseEntity<ApiResponse<List<ImageStatusResponse>>> checkImageStatus(@AuthenticationPrincipal User loginUser, @RequestParam List<Long> imageIds){
+        List<ImageStatusResponse> data= reviewPostService.getImageStatuses(loginUser,imageIds);
         return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .body(new ApiResponse<>(
                         true,

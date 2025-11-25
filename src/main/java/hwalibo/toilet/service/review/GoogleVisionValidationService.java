@@ -3,6 +3,7 @@ package hwalibo.toilet.service.review;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.type.ValidationStatus;
 import hwalibo.toilet.respository.review.ReviewRepository;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
 import hwalibo.toilet.service.s3.S3DownloadService;
@@ -242,8 +243,8 @@ public class GoogleVisionValidationService {
             // 1) S3에서 파일 삭제
             s3UploadService.delete(imageUrl);
 
-            // 2) DB에서 데이터 영구 삭제 (Hard Delete)
-            reviewImageRepository.delete(image);
+           //2)DB 상태 변경
+            image.approve();
         }
 
     }
