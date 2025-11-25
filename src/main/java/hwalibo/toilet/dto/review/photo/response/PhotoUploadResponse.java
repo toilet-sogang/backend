@@ -21,15 +21,7 @@ public class PhotoUploadResponse {
 
 
     // Service Layer의 List<String> URL들을 Response DTO로 변환하는 팩토리 메서드
-    public static PhotoUploadResponse of(List<ReviewImage> savedImage) {
-        List<PhotoUrlResponse> photoResponses = savedImage.stream()
-                // String URL -> PhotoUrlResponse 객체로 변환
-                .map(image -> PhotoUrlResponse.builder()
-                        .photoId(image.getId()) // photoId 필드 추가
-                        .photoUrl(image.getUrl())
-                        .build())
-                .collect(Collectors.toList());
-
+    public static PhotoUploadResponse of(List<PhotoUrlResponse> photoResponses) {
         return PhotoUploadResponse.builder()
                 .createdPhotos(photoResponses)
                 .build();

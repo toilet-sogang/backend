@@ -7,6 +7,7 @@ import hwalibo.toilet.domain.type.ValidationStatus;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.chat.response.ImageStatusResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
+import hwalibo.toilet.dto.review.photo.response.PhotoUrlResponse;
 import hwalibo.toilet.dto.review.request.ReviewCreateRequest;
 import hwalibo.toilet.dto.review.response.ReviewCreateResponse;
 import hwalibo.toilet.respository.review.ReviewImageRepository;
@@ -17,6 +18,8 @@ import hwalibo.toilet.service.review.GoogleVisionValidationService;
 import hwalibo.toilet.service.s3.S3UploadService;
 import hwalibo.toilet.service.user.UserRankService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -126,34 +129,53 @@ public class ReviewPostService {
         // 기존 approved 이미지 개수를 nextOrder의 시작점으로 사용합니다.
         int nextOrder = (int) currentApprovedCount;
 
-        List<ReviewImage> newImages = new ArrayList<>();
-        //ReviewImage로 변환(PENDING 상태)
-        for (String url : uploadedUrls) {
-            newImages.add(ReviewImage.builder()
+        List<NewImageContext> contexts=new ArrayList<>();
+        List<ReviewImage> imagesToSave= new ArrayList<>();
+
+        for (int i = 0; i < uploadedUrls.size(); i++) {
+            String url = uploadedUrls.get(i);
+
+            ReviewImage image = ReviewImage.builder()
                     .url(url)
                     .sortOrder(nextOrder++)
                     .review(review)
-                    .build());
+                    .status(ValidationStatus.PENDING) // 명시적 PENDING
+                    .build();
+
+            imagesToSave.add(image);
+            // ⭐️ 여기서 인덱스(i)와 엔티티를 묶어둡니다.
+            contexts.add(new NewImageContext(i, image));
         }
 
         // 7. db에 이미지 저장
-        List<ReviewImage> savedImages = reviewImageRepository.saveAll(newImages);
+        reviewImageRepository.saveAll(imagesToSave);
 
         // 8. 저장된 이미지들을 비동기 검증 서비스에 전달 (트랜잭션 커밋 후 실행)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                for (ReviewImage savedImage : savedImages) {
+                for (NewImageContext ctx : contexts) {
                     try {
-                        googleVisionValidationService.validateImage(savedImage.getId(), savedImage.getUrl());
+                        // saveAll을 했으므로 ID가 존재함
+                        if (ctx.getImage().getId() != null) {
+                            googleVisionValidationService.validateImage(ctx.getImage().getId(), ctx.getImage().getUrl());
+                        }
                     } catch (Exception e) {
-                        log.error("비동기 검수 호출 중 에러: {}", savedImage.getId(), e);
+                        log.error("비동기 검수 호출 중 에러: index={}, id={}", ctx.getIndexInRequest(), ctx.getImage().getId(), e);
                     }
                 }
             }
         });
 
-        return PhotoUploadResponse.of(savedImages);
+        List<PhotoUrlResponse> dtos = contexts.stream()
+                .map(ctx -> PhotoUrlResponse.builder()
+                        .index(ctx.getIndexInRequest())      // 요청 순서 (0, 1...)
+                        .photoId(ctx.getImage().getId())     // DB PK (폴링용)
+                        .photoUrl(ctx.getImage().getUrl())   // URL
+                        .build())
+                .toList();
+
+        return PhotoUploadResponse.of(dtos);
     }
 
     @Transactional(readOnly=true)
@@ -181,6 +203,14 @@ public class ReviewPostService {
                 .map(ImageStatusResponse::new)
                 .collect(Collectors.toList());
     }
+
+    @Getter
+    @AllArgsConstructor
+    private static class NewImageContext {
+        private int indexInRequest;
+        private ReviewImage image;
+    }
+
     }
 
 
