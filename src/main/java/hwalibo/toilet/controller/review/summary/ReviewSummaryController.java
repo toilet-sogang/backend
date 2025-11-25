@@ -1,7 +1,7 @@
 package hwalibo.toilet.controller.review.summary;
 
 import hwalibo.toilet.dto.global.response.ApiResponse;
-import hwalibo.toilet.dto.review.response.ReviewSummaryResponse;
+import hwalibo.toilet.dto.review.response.summary.ReviewSummaryResponse;
 import hwalibo.toilet.service.review.summary.ReviewSummaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

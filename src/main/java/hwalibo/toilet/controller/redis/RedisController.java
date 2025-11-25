@@ -38,7 +38,7 @@ public class RedisController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             ApiResponse<String> response = new ApiResponse<>(false, 500, "Redis 연결 실패: " + e.getMessage());
-            return ResponseEntity.status(500).body(response); // 500 상태 코드와 함께 응답
+            return ResponseEntity.status(500).body(response);
         }
     }
 }

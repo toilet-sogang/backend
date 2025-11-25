@@ -1,4 +1,4 @@
-package hwalibo.toilet.dto.review.response;
+package hwalibo.toilet.dto.review.response.summary;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

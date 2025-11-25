@@ -6,7 +6,7 @@ import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.review.photo.request.ReviewPhotoUpdateRequest;
 import hwalibo.toilet.dto.review.photo.response.ReviewPhotoUpdateResponse;
 import hwalibo.toilet.dto.review.request.ReviewUpdateRequest;
-import hwalibo.toilet.dto.review.response.MyReviewListResponse;
+import hwalibo.toilet.dto.review.response.user.MyReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewUpdateResponse;
 import hwalibo.toilet.service.review.ReviewCommandService;
 import hwalibo.toilet.service.review.query.ReviewQueryService;

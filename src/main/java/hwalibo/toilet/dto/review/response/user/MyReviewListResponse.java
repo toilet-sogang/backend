@@ -1,4 +1,4 @@
-package hwalibo.toilet.dto.review.response;
+package hwalibo.toilet.dto.review.response.user;
 
 import lombok.Getter;
 
