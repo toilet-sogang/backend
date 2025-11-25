@@ -244,7 +244,7 @@ public class GoogleVisionValidationService {
             s3UploadService.delete(imageUrl);
 
            //2)DB 상태 변경
-            image.approve();
+            image.reject();
         }
 
     }
