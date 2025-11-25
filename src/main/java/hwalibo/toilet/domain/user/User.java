@@ -67,6 +67,7 @@ public class User implements UserDetails {
     // 네이버 'profile_image' URL 하나를 저장할 필드
     private String profile;
 
+    //유저의 상태 (회원가입, 회원 탈퇴)
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -75,38 +76,25 @@ public class User implements UserDetails {
     // 탈퇴 일시
     private LocalDateTime deletedAt;
 
-    // 네이버의 Refresh Token을 저장할 별도 필드
-    @Column(length = 1024) // 네이버 리프레시 토큰은 길 수 있으므로 넉넉하게
+    // Refresh Token
+    private String refreshToken;
+
+    // 네이버의 Refresh Token을 저장할 필드
+    @Column(length = 1024)
     private String naverRefreshToken;
 
-    // 이름 업데이트 메서드
+    // 이름 업데이트
     public void updateName(String newName) {
         this.name = newName;
     }
 
-    /**
-     * 토큰 갱신을 위한 필드와 메서드들
-     * */
-
-    // Refresh Token 저장을 위한 필드 추가
-    private String refreshToken;
-
-    // Refresh Token 업데이트를 위한 메서드
-    public void updateRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    // 네이버 Refresh Token 업데이트 메서드
-    public void updateNaverRefreshToken(String naverRefreshToken) {
-        this.naverRefreshToken = naverRefreshToken;
-    }
-
-    //유저의 리뷰 개수
+    //유저의 리뷰 개수 증가
     public void addReview() {
         if(numReview==null) numReview=0;
         this.numReview++;
     }
 
+    //유저의 리뷰 삭제
     public void removeReview() {
         if (numReview == null || numReview <= 0) {
             this.numReview = 0;
@@ -115,13 +103,13 @@ public class User implements UserDetails {
         this.numReview--;
     }
 
-    // 탈퇴한 유저 재활성화 메서드
+    // 탈퇴 유저 재활성화 메서드
     public void reActivate() {
         this.status = UserStatus.ACTIVE;
         this.deletedAt = null;
     }
 
-    // 성별 업데이트 메서드
+    // 성별 업데이트
     public void updateGender(Gender gender) {
         this.gender = gender;
     }
@@ -131,7 +119,7 @@ public class User implements UserDetails {
         this.profile = profileImageUrl;
     }
 
-    //탈퇴 메서드
+    //탈퇴
     public void withdrawAndAnonymize() {
         this.name = "탈퇴한 사용자";
         this.profile = null;
@@ -139,6 +127,16 @@ public class User implements UserDetails {
         this.deletedAt = LocalDateTime.now();
         this.refreshToken = null;
         this.naverRefreshToken = null;
+    }
+
+    // Refresh Token 업데이트를 위한 메서드
+    public void updateRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    // 네이버 Refresh Token 업데이트 메서드
+    public void updateNaverRefreshToken(String naverRefreshToken) {
+        this.naverRefreshToken = naverRefreshToken;
     }
 
     // ========= UserDetails 인터페이스 구현  ========== //
