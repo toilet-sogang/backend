@@ -131,6 +131,7 @@ public class User implements UserDetails {
         this.profile = profileImageUrl;
     }
 
+    //탈퇴 메서드
     public void withdrawAndAnonymize() {
         this.name = "탈퇴한 사용자";
         this.profile = null;
