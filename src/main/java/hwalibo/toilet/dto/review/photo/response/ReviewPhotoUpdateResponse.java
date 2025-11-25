@@ -30,6 +30,5 @@ public class ReviewPhotoUpdateResponse {
     public static class UpdatedPhotoDto {
         private int index;
         private Long imageId;
-        private ValidationStatus status;
     }
 }
