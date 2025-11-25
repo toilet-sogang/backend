@@ -9,17 +9,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/toilet/{toiletId}/reviews/{reviewId}/like")
 @RequiredArgsConstructor
 public class ReviewLikeController {
     private final ReviewLikeService reviewLikeService;
 
-    @PostMapping("/{toiletId}/reviews/{reviewId}/like")
+    @PostMapping
     @Operation(summary = "리뷰 좋아요", security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<Void>> like(
             @AuthenticationPrincipal User loginUser,
@@ -37,7 +35,7 @@ public class ReviewLikeController {
                 ));
     }
 
-    @DeleteMapping("/{toiletId}/reviews/{reviewId}/like")
+    @DeleteMapping
     @Operation(summary = "리뷰 좋아요 취소", security = { @SecurityRequirement(name = "bearerAuth") })
     public ResponseEntity<ApiResponse<Void>> unlike(
             @AuthenticationPrincipal User loginUser,
