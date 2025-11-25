@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import static hwalibo.toilet.auth.jwt.JwtConstants.*;
-
 @Slf4j
 @Component
 public class JwtTokenProvider {
@@ -85,7 +83,6 @@ public class JwtTokenProvider {
         String genderStr = claims.get("gender", String.class);
         Gender gender = (genderStr != null) ? Gender.valueOf(genderStr) : null;
 
-
         User principal = User.builder()
                 .id(Long.parseLong(claims.getSubject()))
                 .username(claims.get("username", String.class))
@@ -106,7 +103,6 @@ public class JwtTokenProvider {
     // JWT 토큰 검증
     public boolean validateToken(String token) {
         token = stripBearerPrefix(token);
-
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             log.info("JWT token is valid.");
@@ -120,7 +116,7 @@ public class JwtTokenProvider {
     // AccessToken 남은 만료 시간(ms) 조회
     public long getRemainingTime(String token) {
         try {
-            token = stripBearerPrefix(token); // "Bearer " 제거
+            token = stripBearerPrefix(token);
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
@@ -129,8 +125,7 @@ public class JwtTokenProvider {
 
             Date expiration = claims.getExpiration();
             long now = System.currentTimeMillis();
-
-            return expiration.getTime() - now; // 남은 만료 시간 (ms)
+            return expiration.getTime() - now; // 남은 만료 시간
         } catch (JwtException e) {
             log.error("Error getting expiration from token: {}", e.getMessage());
             throw new InvalidTokenException("유효하지 않은 토큰입니다.");
@@ -164,29 +159,23 @@ public class JwtTokenProvider {
         return new Date(now + validityInMilliseconds);
     }
 
-    // ✅ buildToken
     private String buildToken(String userId, String username, String authorities, Date validity, Gender gender) {
         JwtBuilder builder = Jwts.builder()
                 .signWith(key, SignatureAlgorithm.HS256)
                 .setExpiration(validity);
 
         if (userId != null) {
-            // subject에는 User의 ID를 저장 (고유 식별자)
             builder.setSubject(userId);
         }
         if (username != null) {
-            // 'username'이라는 별도 클레임을 만들어 사용자 이름 저장
             builder.claim("username", username);
         }
         if (authorities != null) {
-            // 'auth' 클레임에 권한 정보 저장
             builder.claim("auth", authorities);
         }
         if (gender != null) {
-            // 'gender' 클레임에 성별 정보 저장
             builder.claim("gender", gender.name());
         }
-
         return builder.compact();
     }
     private Claims parseClaimsFromToken(String token) {

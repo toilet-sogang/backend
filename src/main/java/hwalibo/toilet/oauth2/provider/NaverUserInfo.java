@@ -20,7 +20,6 @@ public class NaverUserInfo implements OAuth2UserInfo {
 
     @Override
     public String getProviderId() {
-        // 네이버의 고유 ID는 'id' 필드에 있습니다.
         return (String) attributes.get("id");
     }
 
@@ -31,20 +30,16 @@ public class NaverUserInfo implements OAuth2UserInfo {
 
     @Override
     public String getName() {
-        // 네이버의 닉네임은 'nickname' 필드에 있습니다.
         return (String) attributes.get("nickname");
     }
 
     @Override
     public String getProfileImageUrl() {
-        // 네이버의 프로필 사진 URL은 'profile_image' 필드에 있습니다.
         return (String) attributes.get("profile_image");
     }
 
     @Override
-    // ⬅️ 수정: 반환 타입을 Gender Enum으로 변경하고, Naver 코드를 변환하여 반환
     public Gender getGender() {
-        // Naver API에서 String("M" 또는 "F")으로 받은 후, Gender Enum으로 변환하여 반환합니다.
         String naverGenderCode = (String) attributes.get("gender");
         return Gender.fromNaverCode(naverGenderCode);
     }

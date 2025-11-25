@@ -54,7 +54,7 @@ public class SecurityConfig {
         };
     }
 
-    // ✅ JwtAuthenticationFilter를 Bean으로 등록 (EntryPoint 주입)
+    // JwtAuthenticationFilter를 Bean으로 등록 (EntryPoint 주입)
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationEntryPoint restAuthenticationEntryPoint) {
         return new JwtAuthenticationFilter(jwtTokenProvider, redisTemplate, restAuthenticationEntryPoint);
@@ -65,17 +65,12 @@ public class SecurityConfig {
                                                    JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .cors(withDefaults())
-
-                // 기본 인증/CSRF/폼/로그아웃 비활성화
                 .httpBasic(h -> h.disable())
                 .csrf(c -> c.disable())
                 .formLogin(f -> f.disable())
                 .logout(l -> l.disable())
                 .anonymous(withDefaults())
-
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // 요청별 권한
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/index.html", "/auth/callback.html",
@@ -84,20 +79,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // 전역 EntryPoint (필터/보호자원에서 인증 실패 시 공통 401 JSON)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint()))
-
-                // OAuth2 로그인
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2SuccessHandler)
                         .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
                 )
-
-                // JWT 필터(Bean) 등록
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }
-

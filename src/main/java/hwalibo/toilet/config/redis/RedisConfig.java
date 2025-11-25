@@ -10,8 +10,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
-    //로컬: @Value("${REDIS_HOST:localhost}")
-    @Value("${REDIS_HOST:redis}") //배포
+    @Value("${REDIS_HOST:redis}")
     private String redisHost;
 
     @Value("${REDIS_PORT:6379}")

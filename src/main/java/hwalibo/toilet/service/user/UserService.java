@@ -56,6 +56,7 @@ public class UserService {
         return buildUserResponseWithRate(user);
     }
 
+    //유저 이름 수정
     @Transactional
     public UserResponse updateUserName(User loginUser, UserNameUpdateRequest request) {
         if (loginUser == null) {
@@ -65,15 +66,12 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
         String newName = request.getName();
         String currentName = user.getName();
-        // 1. 현재 닉네임과 동일한지 검사
         if (newName.equals(currentName)) {
             throw new IdenticalNameException("현재 닉네임과 동일한 닉네임입니다.");
         }
-        // 2. (동일하지 않을 경우에만) 다른 사용자와 중복되는지 검사
         if (userRepository.existsByName(newName)) {
             throw new DuplicateUserNameException("이미 존재하는 닉네임입니다.");
         }
-        // 3. 모든 검사를 통과하면 이름 업데이트
         user.updateName(newName);
         return buildUserResponseWithRate(user);
     }
@@ -195,7 +193,7 @@ public class UserService {
     }
 
     private UserResponse buildUserResponseWithRate(User user) {
-        int rate = userRankService.calculateUserRate(user.getId());  // ✔ 프록시 통해 호출됨 → 캐싱됨
+        int rate = userRankService.calculateUserRate(user.getId());
         return UserResponse.from(user, rate);
     }
 

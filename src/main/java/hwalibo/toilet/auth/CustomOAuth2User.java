@@ -11,14 +11,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-
 @Getter
 @AllArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
 
     private final User user;
     private final Map<String, Object> attributes;
-
 
     @Override
     public String getName() {

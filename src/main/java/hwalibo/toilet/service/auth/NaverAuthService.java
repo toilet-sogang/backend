@@ -17,7 +17,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class NaverAuthService {
 
-    // Bean으로 등록한 WebClient 주입
     private final WebClient webClient;
 
     @Value("${spring.security.oauth2.client.registration.naver.client-id}")
@@ -38,7 +37,6 @@ public class NaverAuthService {
             log.warn("Naver Refresh Token이 DB에 없어 연동 해제를 스킵합니다.");
             return;
         }
-
         try {
             // 1. DB의 Refresh Token으로 Naver의 Access Token을 갱신
             String newAccessToken = refreshNaverAccessToken(naverRefreshToken);
@@ -54,20 +52,17 @@ public class NaverAuthService {
                     .uri(NAVER_TOKEN_PATH)
                     .body(BodyInserters.fromValue(body))
                     .retrieve()
-                    // 4xx, 5xx 에러 발생 시 예외로 변환
                     .onStatus(HttpStatusCode::isError, clientResponse ->
                             clientResponse.bodyToMono(String.class)
                                     .flatMap(errorBody -> Mono.error(new RuntimeException("네이버 연동 해제 실패: " + errorBody)))
                     )
                     .bodyToMono(String.class)
-                    // (중요) @Transactional 메서드 내에서 호출되므로, 동기식으로 결과를 기다림
                     .block();
 
             log.info("네이버 연동 해제 성공. 응답: {}", response);
 
         } catch (Exception e) {
             log.error("네이버 연동 해제 중 예외 발생: {}", e.getMessage(), e);
-            // 여기서 에러가 나도 회원 탈퇴(DB 삭제)는 계속 진행되어야 함
         }
     }
 
@@ -86,15 +81,12 @@ public class NaverAuthService {
                 .uri(NAVER_TOKEN_PATH)
                 .body(BodyInserters.fromValue(body))
                 .retrieve()
-                // 에러 처리
                 .onStatus(HttpStatusCode::isError, clientResponse ->
                         clientResponse.bodyToMono(String.class)
                                 .flatMap(errorBody -> Mono.error(new RuntimeException("네이버 Access Token 갱신 실패: " + errorBody)))
                 )
-                // 1번 DTO로 응답 받기
                 .bodyToMono(NaverTokenResponse.class)
-                .block(); // 동기식으로 대기
-
+                .block();
         if (response != null && response.getAccessToken() != null) {
             log.info("네이버 Access Token 갱신 성공.");
             return response.getAccessToken();

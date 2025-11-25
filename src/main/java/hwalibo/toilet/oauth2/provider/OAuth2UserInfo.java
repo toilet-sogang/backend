@@ -9,6 +9,7 @@ import java.util.Map;
  * 공통된 형식으로 변환하기 위한 인터페이스
  * 이후에 Google, Facebook, Kakaotalk, Line 등 구현체 추가 가능
  * */
+
 public interface OAuth2UserInfo {
 
     // 제공자(구글, 네이버 등)의 고유 ID를 반환

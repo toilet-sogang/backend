@@ -1,7 +1,5 @@
 package hwalibo.toilet.auth.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import hwalibo.toilet.dto.global.response.ApiResponse;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
-    private final AuthenticationEntryPoint entryPoint; // 전역 EntryPoint 주입
+    private final AuthenticationEntryPoint entryPoint;
 
     private static final List<AntPathRequestMatcher> SKIP_MATCHERS = List.of(
             new AntPathRequestMatcher("/auth/refresh"),
@@ -99,16 +97,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new org.springframework.security.core.AuthenticationException("JWT 오류: " + e.getMessage()) {});
             return;
         }
-
         chain.doFilter(request, response);
     }
 
-    /** Authorization: Bearer <token>에서 토큰만 추출 */
+    // Authorization: Bearer <token>에서 토큰만 추출
     private String resolveToken(HttpServletRequest request) {
-        String bearer = request.getHeader(HEADER_STRING);       // ← static import 사용
+        String bearer = request.getHeader(HEADER_STRING);
         if (StringUtils.hasText(bearer) && bearer.startsWith(TOKEN_PREFIX)) {
             log.info("Authorization 헤더에서 Bearer 토큰 추출 성공: {}", bearer);
-            return bearer.substring(TOKEN_PREFIX.length());     // ← static import 사용
+            return bearer.substring(TOKEN_PREFIX.length());
         }
         log.warn("Authorization 헤더에서 Bearer 토큰을 찾지 못함.");
         return null;
