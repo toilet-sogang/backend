@@ -23,13 +23,13 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN ri.review r " +
             "WHERE r.toilet.id = :toiletId " +
-            "AND r.toilet.gender = :gender " + // ⭐ 성별 필터링 추가
+            "AND r.toilet.gender = :gender " +
             "AND ri.status='APPROVED'" +
             "ORDER BY r.createdAt DESC, ri.id DESC")
     @EntityGraph(attributePaths = {"review", "review.toilet"})
     Slice<ReviewImage> findFirstPageByToiletId(
             @Param("toiletId") Long toiletId,
-            @Param("gender") Gender gender, // ⭐ 파라미터 추가
+            @Param("gender") Gender gender,
             Pageable pageable);
 
     /**
@@ -39,7 +39,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN ri.review r " +
             "WHERE r.toilet.id = :toiletId " +
-            "AND r.toilet.gender = :gender " + // ⭐ 성별 필터링 추가
+            "AND r.toilet.gender = :gender " +
             "AND ri.status='APPROVED'" +
             "AND (" +
             "   r.createdAt < :lastCreatedAt OR " +
@@ -49,7 +49,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
     @EntityGraph(attributePaths = {"review", "review.toilet"})
     Slice<ReviewImage> findNextPageByToiletId(
             @Param("toiletId") Long toiletId,
-            @Param("gender") Gender gender,                       // ⭐ 파라미터 추가
+            @Param("gender") Gender gender,
             @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
             @Param("lastId") Long lastId,
             Pageable pageable);
@@ -65,8 +65,6 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "WHERE ri.id = :photoId " +
             "AND ri.status = 'APPROVED'" )
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
-
-    List<ReviewImage> findByReviewId(Long reviewId);
 }
 
 
