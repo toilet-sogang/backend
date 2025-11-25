@@ -1,6 +1,7 @@
 package hwalibo.toilet.respository.review;
 
 import hwalibo.toilet.domain.review.ReviewImage;
+import hwalibo.toilet.domain.type.Gender;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -15,48 +16,47 @@ import java.util.Optional;
 
 
 public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
-
     /**
      * 1. 첫 페이지 조회 (커서가 없을 때)
-     * - JOIN: Review 엔티티를 JOIN하여 createdAt으로 정렬합니다.
-     * - 정렬: 1순위 ri.review.createdAt DESC, 2순위 ri.id DESC
+     * - 성별 필터링 추가: 로그인 유저의 성별과 화장실 성별이 일치하는 리뷰만 조회
      */
     @Query("SELECT ri FROM ReviewImage ri " +
-            "JOIN ri.review r " + // Review(r)를 JOIN
-            "WHERE r.toilet.id = :toiletId " + // review.toilet.id로 조건 변경
-            "AND ri.status='APPROVED'" + //APPROVED 상태만 필터링
-            "ORDER BY r.createdAt DESC, ri.id DESC") // 1. 정렬 기준 변경 (r.createdAt)
+            "JOIN ri.review r " +
+            "WHERE r.toilet.id = :toiletId " +
+            "AND r.toilet.gender = :gender " + // ⭐ 성별 필터링 추가
+            "AND ri.status='APPROVED'" +
+            "ORDER BY r.createdAt DESC, ri.id DESC")
     @EntityGraph(attributePaths = {"review", "review.toilet"})
     Slice<ReviewImage> findFirstPageByToiletId(
             @Param("toiletId") Long toiletId,
+            @Param("gender") Gender gender, // ⭐ 파라미터 추가
             Pageable pageable);
 
     /**
      * 2. 다음 페이지 조회 (커서가 있을 때)
-     * - '복합 키' WHERE 절 사용 (review.createdAt + reviewImage.id)
+     * - 성별 필터링 추가: 로그인 유저의 성별과 화장실 성별이 일치하는 리뷰만 조회
      */
     @Query("SELECT ri FROM ReviewImage ri " +
-            "JOIN ri.review r " + // Review(r)를 JOIN
-            "WHERE r.toilet.id = :toiletId " + // review.toilet.id로 조건 변경
+            "JOIN ri.review r " +
+            "WHERE r.toilet.id = :toiletId " +
+            "AND r.toilet.gender = :gender " + // ⭐ 성별 필터링 추가
             "AND ri.status='APPROVED'" +
-            "AND (" + // 2. 복합 키 WHERE 절
-            "   r.createdAt < :lastCreatedAt OR " + // 1순위: review.createdAt 비교
-            "   (r.createdAt = :lastCreatedAt AND ri.id < :lastId)" + // 2순위: reviewImage.id 비교
+            "AND (" +
+            "   r.createdAt < :lastCreatedAt OR " +
+            "   (r.createdAt = :lastCreatedAt AND ri.id < :lastId)" +
             ") " +
-            "ORDER BY r.createdAt DESC, ri.id DESC") // 3. 정렬 기준 변경 (r.createdAt)
+            "ORDER BY r.createdAt DESC, ri.id DESC")
     @EntityGraph(attributePaths = {"review", "review.toilet"})
     Slice<ReviewImage> findNextPageByToiletId(
             @Param("toiletId") Long toiletId,
-            @Param("lastCreatedAt") LocalDateTime lastCreatedAt, // Review의 createdAt
-            @Param("lastId") Long lastId,                       // ReviewImage의 id
+            @Param("gender") Gender gender,                       // ⭐ 파라미터 추가
+            @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
+            @Param("lastId") Long lastId,
             Pageable pageable);
 
     /**
      * N+1 문제를 해결하기 위해 @Query와 JOIN FETCH를 사용합니다.
-     * 1. ri.review (Review 엔티티)
-     * 2. r.user (User 엔티티)
-     * 3. r.tag (Tag 컬렉션)
-     * 위 3가지를 한 번의 쿼리로 모두 EAGER 로딩합니다.
+     * 이 메서드는 상세 조회용이며, 성별 필터링 로직은 ReviewGetService에서 처리됩니다. (유지)
      */
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN FETCH ri.review r " +
@@ -66,6 +66,7 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage,Long> {
             "AND ri.status = 'APPROVED'" )
     Optional<ReviewImage> findByIdWithReviewAndDetails(@Param("photoId") Long photoId);
 
+    List<ReviewImage> findByReviewId(Long reviewId);
 }
 
 

@@ -3,6 +3,7 @@ package hwalibo.toilet.service.review;
 import hwalibo.toilet.domain.review.Review;
 import hwalibo.toilet.domain.review.ReviewImage;
 import hwalibo.toilet.domain.toilet.Toilet;
+import hwalibo.toilet.domain.type.Gender;
 import hwalibo.toilet.domain.type.SortType;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
@@ -35,6 +36,7 @@ public class ReviewGetService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
 
+
     @Transactional(readOnly = true)
     public ReviewListResponse getReviewList(User loginUser, Long toiletId, SortType sortType) {
         if (loginUser == null) {
@@ -66,7 +68,6 @@ public class ReviewGetService {
             throw new EntityNotFoundException("해당 화장실에 리뷰가 없습니다.");
         }
 
-
         List<ReviewResponse> responseList = reviews.stream()
                 .map(review -> ReviewResponse.from(review, canViewPhoto))
                 .collect(Collectors.toList());
@@ -80,17 +81,22 @@ public class ReviewGetService {
             throw new SecurityException("유효하지 않은 토큰입니다.");
         }
 
+        // 로그인 유저의 성별을 가져옵니다.
+        Gender userGender = loginUser.getGender();
+
         Pageable pageable = PageRequest.of(0, size);
 
         Slice<ReviewImage> imageSlice;
         if (nextCursor == null || nextCursor.isBlank()) {
             //첫 사진 조회
-            imageSlice = reviewImageRepository.findFirstPageByToiletId(toiletId, pageable);
+            // ⭐ 수정: userGender를 두 번째 파라미터로 전달
+            imageSlice = reviewImageRepository.findFirstPageByToiletId(toiletId, userGender, pageable);
         } else {
             try {
                 var c = CursorUtils.decode(nextCursor);
                 // 이후 사진 조회
-                imageSlice = reviewImageRepository.findNextPageByToiletId(toiletId, c.createdAt(), c.id(), pageable);
+                // ⭐ 수정: userGender를 두 번째 파라미터로 전달
+                imageSlice = reviewImageRepository.findNextPageByToiletId(toiletId, userGender, c.createdAt(), c.id(), pageable);
             } catch (Exception e) {
                 // 예: Base64 디코딩 실패 또는 형식 오류
                 throw new IllegalArgumentException("잘못된 커서 형식입니다.");
@@ -125,6 +131,15 @@ public class ReviewGetService {
         if (!actualToiletId.equals(toiletId)) {
             // 사진(105번)은 존재하지만, 요청한 화장실(12번)의 사진이 아님
             throw new IllegalArgumentException("요청한 화장실에 속한 사진이 아닙니다.");
+        }
+
+        // ⭐ 성별 필터링 로직 추가
+        Gender userGender = loginUser.getGender();
+        Gender toiletGender = reviewImage.getReview().getToilet().getGender();
+
+        if (!Objects.equals(userGender, toiletGender)) {
+            // 성별이 다르면 접근 거부
+            throw new SecurityException("접근 권한이 없습니다. 해당 성별의 리뷰 사진이 아닙니다.");
         }
 
         return PhotoReviewDetailResponse.of(reviewImage.getUrl(),reviewImage.getReview());
