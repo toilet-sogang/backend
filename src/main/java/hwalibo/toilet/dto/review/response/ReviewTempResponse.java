@@ -29,14 +29,9 @@ public class ReviewTempResponse {
     private LocalDateTime updatedAt;
 
     @JsonProperty("isDis")
-    private Boolean isDis; // ERD의 is_dis 필드에 해당
+    private Boolean isDis;
 
-    /**
-     * Review 엔티티를 DTO로 변환하는 정적 팩토리 메서드
-     */
-    // [수정] 메서드의 반환 타입을 클래스 이름과 일치시켰습니다.
     public static ReviewTempResponse from(Review review) {
-        // ReviewTag Enum 리스트를 String 리스트로 변환
         List<String> tagNames = review.getTag().stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());

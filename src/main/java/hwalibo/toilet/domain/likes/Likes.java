@@ -19,7 +19,7 @@ import org.hibernate.annotations.OnDeleteAction;
         name = "likes",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "likes_uk", // 제약조건 이름 (DB에서 식별하기 위함)
+                        name = "likes_uk",
                         columnNames = {"user_id", "review_id"}
                 )
         }

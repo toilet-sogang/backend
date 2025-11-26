@@ -16,7 +16,6 @@ import java.util.List;
 public class ReviewPhotoUpdateResponse {
     private List<UpdatedPhotoDto> photos;
 
-    // 그냥 리스트를 받는 생성자 (Builder가 처리)
     public static ReviewPhotoUpdateResponse of(List<UpdatedPhotoDto> photos) {
         return ReviewPhotoUpdateResponse.builder()
                 .photos(photos)

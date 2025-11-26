@@ -36,7 +36,6 @@ public class ReviewCreateRequest {
     @JsonProperty("isDis")
     private boolean isDis;
 
-    // DTO → Entity 변환
     public Review toEntity(User user, Toilet toilet) {
         List<Tag>tagEnum=(this.tag!=null)?
                 this.tag.stream()
