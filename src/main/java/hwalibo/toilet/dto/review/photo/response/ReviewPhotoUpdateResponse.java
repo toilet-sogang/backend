@@ -1,15 +1,13 @@
 package hwalibo.toilet.dto.review.photo.response;
 
-import hwalibo.toilet.domain.review.ReviewImage;
-import hwalibo.toilet.domain.type.ValidationStatus;
-import hwalibo.toilet.service.user.UserService;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Getter
 @NoArgsConstructor

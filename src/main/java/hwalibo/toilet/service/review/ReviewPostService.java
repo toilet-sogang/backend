@@ -53,19 +53,19 @@ public class ReviewPostService {
         Toilet toilet = toiletRepository.findById(toiletId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 화장실입니다."));
 
-        // 2. ✨ [핵심 수정] DB에서 최신 유저 정보 조회 (Gender 포함)
-        // loginUser의 ID를 사용하여 DB에서 유저를 조회합니다. 이 객체(managedUser)는 정확한 성별 정보를 가집니다.
+        // DB에서 최신 유저 정보 조회 (Gender 포함)
+        // loginUser의 ID를 사용하여 DB에서 유저를 조회. 이 객체(managedUser)는 정확한 성별 정보를 가진다.
         User managedUser = userRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
         // 3. 성별 일치 여부 확인 (managedUser 사용)
-        // ⭐️ managedUser의 성별이 NULL이 아니며, 화장실 성별과 다를 경우에만 예외 발생
+        // managedUser의 성별이 NULL이 아니며, 화장실 성별과 다를 경우에만 예외 발생
         if (managedUser.getGender() != null && !Objects.equals(managedUser.getGender(), toilet.getGender())) {
             throw new SecurityException("다른 성별의 화장실 리뷰는 작성할 수 없습니다.");
         }
 
         // 4. 리뷰 엔티티 생성 시 managedUser 사용
-        // FK 설정을 위해 정확한 managedUser 객체를 전달합니다.
+        // FK 설정을 위해 정확한 managedUser 객체를 전달
         Review review = request.toEntity(managedUser, toilet);
 
         // 5. 리뷰 저장
@@ -84,7 +84,7 @@ public class ReviewPostService {
     }
 
     @Transactional
-//이미지 업로드
+    //이미지 업로드
     public PhotoUploadResponse uploadImage(User loginUser,Long reviewId, List< MultipartFile > images) {
         if (loginUser == null) {
             throw new SecurityException("유효하지 않은 토큰입니다.");
@@ -94,13 +94,13 @@ public class ReviewPostService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 리뷰입니다."));
 
-        // 2. ✨ [핵심 수정] DB에서 최신 유저 정보 조회 (Gender 포함)
-        // loginUser의 ID를 사용하여 DB에서 유저를 조회합니다. 이 객체(managedUser)는 정확한 성별 정보를 가집니다.
+        // 2. DB에서 최신 유저 정보 조회 (Gender 포함)
+        // loginUser의 ID를 사용하여 DB에서 유저를 조회. 이 객체(managedUser)는 정확한 성별 정보를 가진다.
         User managedUser = userRepository.findById(loginUser.getId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
 
 
-        // 3. ✨ 성별 일치 여부 확인 (managedUser 사용)
+        // 3. 성별 일치 여부 확인 (managedUser 사용)
         // managedUser의 성별이 NULL이 아니며, 리뷰가 달린 화장실 성별과 다를 경우에만 예외 발생
         if (managedUser.getGender() != null && !Objects.equals(managedUser.getGender(), review.getToilet().getGender()))  {
             throw new SecurityException("다른 성별의 화장실에는 이미지를 추가할 수 없습니다.");
@@ -110,7 +110,7 @@ public class ReviewPostService {
         if (images == null || images.isEmpty()) return PhotoUploadResponse.of(List.of());
 
 
-        // 5. 이미지 개수 제한 확인 (기존 로직 유지)
+        // 5. 이미지 개수 제한 확인
         long currentApprovedCount = review.getReviewImages().stream()
                 .filter(image -> image.getStatus() == ValidationStatus.APPROVED)
                 .count();
@@ -125,7 +125,7 @@ public class ReviewPostService {
         uploadedUrls = s3UploadService.uploadAll(images, "reviews");
 
         // Review 엔티티의 reviewImages 컬렉션의 size를 기반으로 nextOrder 설정
-        // 기존 approved 이미지 개수를 nextOrder의 시작점으로 사용합니다.
+        // 기존 approved 이미지 개수를 nextOrder의 시작점으로 사용
         int nextOrder = (int) currentApprovedCount;
 
         List<NewImageContext> contexts=new ArrayList<>();
@@ -142,7 +142,7 @@ public class ReviewPostService {
                     .build();
 
             imagesToSave.add(image);
-            // ⭐️ 여기서 인덱스(i)와 엔티티를 묶어둡니다.
+            // 인덱스(i)와 엔티티를 묶기
             contexts.add(new NewImageContext(i, image));
         }
 
@@ -192,7 +192,7 @@ public class ReviewPostService {
         }
 
         // DB에서 가져온 리스트(images)는 순서가 뒤섞일 수 있으므로,
-        // 요청한 imageIds 순서에 맞춰 재정렬합니다.
+        // 요청한 imageIds 순서에 맞춰 재정렬
         Map<Long, ReviewImage> imageMap = images.stream()
                 .collect(Collectors.toMap(ReviewImage::getId, img -> img));
 

@@ -35,9 +35,8 @@ public class ReviewCreateRequest {
     @NotNull(message="장애인 화장실 여부는 필수 선택해야합니다.")
     @JsonProperty("isDis")
     private boolean isDis;
+
     // DTO → Entity 변환
-    // 실제 서비스 로직에서는 이 메서드로 생성된 Review 객체에
-    // User와 Toilet 엔티티를 추가로 설정해주어야 합니다.
     public Review toEntity(User user, Toilet toilet) {
         List<Tag>tagEnum=(this.tag!=null)?
                 this.tag.stream()

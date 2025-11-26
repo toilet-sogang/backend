@@ -46,7 +46,7 @@ public interface ReviewQueryRepository extends JpaRepository<Review, Long> {
 
     /**
      * 3. 장애인 화장실 리뷰만 필터링 (isDis = true)
-     * (WHERE 절을 r.isDis = true로 수정)
+     *
      */
     @Query("SELECT r FROM Review r " +
             "LEFT JOIN FETCH r.user " +

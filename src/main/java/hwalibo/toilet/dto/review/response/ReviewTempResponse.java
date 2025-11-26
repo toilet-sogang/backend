@@ -20,7 +20,7 @@ public class ReviewTempResponse {
     private String description;
     private Double star;
     private List<String> tag;
-    private Integer good; // '좋아요' 수 필드 추가
+    private Integer good;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;

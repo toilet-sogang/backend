@@ -32,12 +32,12 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✨ 다대일(N:1) 관계 설정: Review(N) : Toilet(1)
+    // 다대일(N:1) 관계 설정: Review(N) : Toilet(1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "toilet_id", nullable = false)
     private Toilet toilet;
 
-    // ✨ 다대일(N:1) 관계 설정: Review(N) : User(1)
+    // 다대일(N:1) 관계 설정: Review(N) : User(1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @NotFound(action = NotFoundAction.IGNORE)
@@ -58,7 +58,6 @@ public class Review {
     @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC, id ASC") // 이미지 순서 정렬
-    // ⚠️ 외래 키 에러 해결을 위해 @Where(clause = "status = 'APPROVED'") 조건이 제거되었습니다.
     private List<ReviewImage> reviewImages = new ArrayList<>();
 
     @Column(columnDefinition = "INTEGER DEFAULT 0")

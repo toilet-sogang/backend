@@ -13,9 +13,8 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Collections;
-import java.util.stream.Collectors;
+
 
 @Getter
 @Builder
@@ -29,7 +28,7 @@ public class ReviewResponse {
     private Double star;
     private List<String> tag;
     private List<String> photo;
-    private Integer good; // '좋아요' 수 필드 추가
+    private Integer good;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;

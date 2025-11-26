@@ -24,8 +24,8 @@ public class GoogleVisionLocalConfig {
     private String credentialsPath;
 
     /**
-     * ImageAnnotatorClient 빈을 생성하여 Spring 컨테이너에 등록합니다.
-     * 이 빈은 Google Vision AI와 통신하는 데 사용됩니다.
+     * ImageAnnotatorClient 빈을 생성하여 Spring 컨테이너에 등록
+     *
      */
     @Bean
     public ImageAnnotatorClient imageAnnotatorClient() throws IOException{

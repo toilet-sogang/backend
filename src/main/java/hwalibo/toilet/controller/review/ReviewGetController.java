@@ -7,7 +7,6 @@ import hwalibo.toilet.dto.review.photo.response.PhotoReviewDetailResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoReviewListResponse;
 import hwalibo.toilet.dto.review.response.ReviewListResponse;
 import hwalibo.toilet.service.review.ReviewGetService;
-import hwalibo.toilet.service.review.ReviewLikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,8 +1,7 @@
 package hwalibo.toilet.controller.review;
 
-import hwalibo.toilet.domain.review.Review;
+
 import hwalibo.toilet.domain.user.User;
-import hwalibo.toilet.dto.chat.response.ImageStatusResponse;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.review.photo.response.PhotoUploadResponse;
 import hwalibo.toilet.dto.review.request.ReviewCreateRequest;

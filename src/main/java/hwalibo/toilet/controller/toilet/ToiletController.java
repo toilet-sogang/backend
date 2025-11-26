@@ -3,7 +3,6 @@ package hwalibo.toilet.controller.toilet;
 import hwalibo.toilet.domain.user.User;
 import hwalibo.toilet.dto.global.response.ApiResponse;
 import hwalibo.toilet.dto.toilet.response.ToiletDetailResponse;
-import hwalibo.toilet.respository.toilet.ToiletRepository;
 import hwalibo.toilet.service.toilet.ToiletService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

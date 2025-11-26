@@ -79,12 +79,12 @@ public class UserService {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
-        // 1. (🚨핵심 수정🚨) 'JOIN FETCH' 쿼리 대신, '부모' 엔티티만 조회합니다.
-        // 'reviewImages' 리스트는 아직 로드되지 않은 'Lazy Loading' 상태입니다.
-        Review review = reviewRepository.findById(reviewId) // 👈 'WithImages'가 빠졌습니다.
+        // 1. 'JOIN FETCH' 쿼리 대신, '부모' 엔티티만 조회합
+        // 'reviewImages' 리스트는 아직 로드되지 않은 'Lazy Loading' 상태
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다. ID: " + reviewId));
 
-        // 2. (변경 없음) 권한 검증
+        // 2. 권한 검증
         if (!review.getUser().getId().equals(loginUser.getId())) {
             throw new SecurityException("리뷰 수정 권한이 없습니다");
         }
@@ -103,9 +103,8 @@ public class UserService {
         if (request != null && request.getDeletedImageIds() != null) {
             Set<Long> idsToDelete = new HashSet<>(request.getDeletedImageIds());
 
-            // 3-1. (⭐️중요⭐️) 'review.getReviewImages()'에 *처음 접근*하는 순간,
-            // JPA가 "아, 이제 자식 리스트가 필요하구나"라고 인지하고
-            // Lazy Loading으로 '수정 가능한' 리스트를 DB에서 SELECT 해옵니다.
+
+            // Lazy Loading으로 '수정 가능한' 리스트를 DB에서 SELECT
             Iterator<ReviewImage> iterator = review.getReviewImages().iterator();
 
             while (iterator.hasNext()) {
@@ -116,7 +115,7 @@ public class UserService {
                     s3UploadService.delete(image.getUrl());
 
                     // b. '수정 가능한' 리스트에서 삭제 (정상 동작)
-                    // 'orphanRemoval=true'가 100% 인지하고 DB에 'DELETE'를 예약합니다.
+                    // 'orphanRemoval=true'가 100% 인지하고 DB에 'DELETE'를 예약
                     iterator.remove();
 
                     log.info("S3 삭제 및 컬렉션에서 제거 완료:{}", image.getUrl());
@@ -124,7 +123,7 @@ public class UserService {
             }
         }
 
-        // 4. [추가 로직] (변경 없음)
+
         long currentImageCount = review.getReviewImages().stream()
                 .filter(image->image.getStatus()== ValidationStatus.APPROVED).count();
         int newImageCount = (newImages != null) ? newImages.size() : 0;

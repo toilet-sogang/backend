@@ -7,7 +7,7 @@ public enum Gender {
             return null;
         }
         try {
-            // Naver 코드가 대문자(M, F)로 오므로, trim 후 바로 valueOf를 시도합니다.
+            // Naver 코드가 대문자(M, F)로 오므로, trim 후 바로 valueOf를 시도
             return Gender.valueOf(code.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             // "M"이나 "F"가 아닌 다른 문자열이 들어왔을 경우

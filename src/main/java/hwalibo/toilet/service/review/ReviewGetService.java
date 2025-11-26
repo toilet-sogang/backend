@@ -88,13 +88,13 @@ public class ReviewGetService {
         Slice<ReviewImage> imageSlice;
         if (nextCursor == null || nextCursor.isBlank()) {
             //첫 사진 조회
-            // ⭐ 수정: userGender를 두 번째 파라미터로 전달
+            //userGender를 두 번째 파라미터로 전달
             imageSlice = reviewImageQueryRepository.findFirstPageByToiletId(toiletId, userGender, pageable);
         } else {
             try {
                 var c = CursorUtils.decode(nextCursor);
                 // 이후 사진 조회
-                // ⭐ 수정: userGender를 두 번째 파라미터로 전달
+                // userGender를 두 번째 파라미터로 전달
                 imageSlice = reviewImageQueryRepository.findNextPageByToiletId(toiletId, userGender, c.createdAt(), c.id(), pageable);
             } catch (Exception e) {
                 // 예: Base64 디코딩 실패 또는 형식 오류
@@ -106,7 +106,7 @@ public class ReviewGetService {
         String newCursor = null;
 
         if (imageSlice.hasNext()) {
-            // getContent()로 실제 List를 가져옵니다.
+            // getContent()로 실제 List를 가져오기
             List<ReviewImage> content = imageSlice.getContent();
 
             ReviewImage lastElement = content.get(content.size() - 1); // 마지막 review Image 가져오기
@@ -128,11 +128,11 @@ public class ReviewGetService {
 
         Long actualToiletId = reviewImage.getReview().getToilet().getId();
         if (!actualToiletId.equals(toiletId)) {
-            // 사진(105번)은 존재하지만, 요청한 화장실(12번)의 사진이 아님
+            // 사진은 존재하지만, 요청한 화장실의 사진이 아님
             throw new IllegalArgumentException("요청한 화장실에 속한 사진이 아닙니다.");
         }
 
-        // ⭐ 성별 필터링 로직 추가
+        // 성별 필터링 로직 추가
         Gender userGender = loginUser.getGender();
         Gender toiletGender = reviewImage.getReview().getToilet().getGender();
 

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "업로드된 사진 하나의 URL 정보")
 public class PhotoUrlResponse {
 
-    // JSON의 키인 "photoUrl"과 일치하도록 필드명을 정합니다.
+
     private String photoUrl;
     private Long photoId;
     private int index;

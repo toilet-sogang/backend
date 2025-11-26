@@ -1,6 +1,5 @@
 package hwalibo.toilet.service.s3;
 
-import com.openai.models.responses.ResponseCodeInterpreterCallCodeDeltaEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -8,7 +7,7 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -23,8 +22,8 @@ public class S3DownloadService {
     private String bucket;
 
 /**
- * S3 URL에서 이미지를 다운로드하여 byte[]로 반환합니다.
- * GptValidationService에서 AI 검증을 위해 사용됩니다.
+ * S3 URL에서 이미지를 다운로드하여 byte[]로 반환
+ * GptValidationService에서 AI 검증을 위해 사용
  * */
 
     public byte[] getBytes(String fileUrl) throws IOException, S3Exception{

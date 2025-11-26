@@ -52,8 +52,8 @@ public interface ReviewImageQueryRepository extends JpaRepository<ReviewImage,Lo
             Pageable pageable);
 
     /**
-     * N+1 문제를 해결하기 위해 @Query와 JOIN FETCH를 사용합니다.
-     * 이 메서드는 상세 조회용이며, 성별 필터링 로직은 ReviewGetService에서 처리됩니다. (유지)
+     * N+1 문제를 해결하기 위해 @Query와 JOIN FETCH를 사용
+     * 이 메서드는 상세 조회용이며, 성별 필터링 로직은 ReviewGetService에서 처리
      */
     @Query("SELECT ri FROM ReviewImage ri " +
             "JOIN FETCH ri.review r " +

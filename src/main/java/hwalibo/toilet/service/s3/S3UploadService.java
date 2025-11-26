@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,7 +14,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.*;
 
@@ -123,7 +121,7 @@ public class S3UploadService {
 
         log.info("--- S3 일괄 삭제 시작. 총 {}개 파일 ---", imageUrls.size());
 
-        // 2. 기존의 단건 삭제 메서드를 반복 호출
+        // 기존의 단건 삭제 메서드를 반복 호출
         for (String url : imageUrls) {
             this.delete(url);
         }
